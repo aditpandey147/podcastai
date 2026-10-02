@@ -1,1279 +1,749 @@
+// frontend/src/pages/Dashboard.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import bannerBg from "../assets/images/banner-bg.jpg";
-import {
-  Home,
-  FolderOpen,
-  PenLine,
-  LayoutGrid,
-  Palette,
-  Megaphone,
-  Sparkles,
-  Library,
-  BarChart3,
-  Heart,
-  Trash2,
-  Settings,
-  CircleHelp,
-  LogOut,
-  Search,
-  Command,
-  Bell,
-  ChevronDown,
-  Plus,
-  Flame,
-  Trophy,
-  ArrowUpRight,
-  BookOpen,
-  ClipboardList,
-  CalendarDays,
-  Check,
-  Table2,
-  FileImage,
-  Bot,
-  GraduationCap,
-  FileText,
-  Download,
-  Link2,
-  Eye,
-  Clock3,
-  XCircle,
-  Pencil,
-  PieChart,
-  Lightbulb,
-  Users,
-  Zap,
-  Menu,
-  Box,
-  LayoutDashboard,
-  Wand2,
-  Upload,
-  File,
-  Target,
-  MessageSquare,
-  Image as ImageIcon,
-  Calendar,
-  Clock,
-  AlertCircle,
-  RefreshCw,
-  CheckCircle,
-  X,
-  Copy,
-  Share2,
-  Globe,
-  Star,
-  ShoppingBag,
-  TrendingUp,
-  Award,
-  Layers,
-  Crown,
-  ChevronLeft,
-  ChevronRight,
-  BadgeCheck,
-  Store,
-  ShoppingCart,
-} from "lucide-react";
+import bannerBg from "../assets/images/banner-bg.png";
+import { Plus, LayoutGrid, Sparkles, Images } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Bar,
-  BarChart,
-  Cell,
-  Legend,
-} from "recharts";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
 
-const statTone = {
-  purple: {
-    box: "bg-[#f2efff]",
-    icon: "text-[#6648e7]",
-    value: "text-[#111827]",
-  },
-  green: {
-    box: "bg-[#edfbf2]",
-    icon: "text-[#16a34a]",
-    value: "text-[#111827]",
-  },
-  orange: {
-    box: "bg-[#fff4e8]",
-    icon: "text-[#f97316]",
-    value: "text-[#111827]",
-  },
-  blue: {
-    box: "bg-[#edf5ff]",
-    icon: "text-[#3b82f6]",
-    value: "text-[#111827]",
-  },
-  red: { box: "bg-[#fff0f1]", icon: "text-[#ef4444]", value: "text-[#ef4444]" },
-};
-
-const bestSellersData = [
-  {
-    title: "Guide",
-    count: "12.4K",
-    products: "products",
-    icon: BookOpen,
-    type: "guide",
-  },
-  {
-    title: "Workbook",
-    count: "9.8K",
-    products: "products",
-    icon: BookOpen,
-    type: "workbook",
-  },
-  {
-    title: "Planner",
-    count: "8.7K",
-    products: "products",
-    icon: CalendarDays,
-    type: "planner",
-  },
-  {
-    title: "Checklist",
-    count: "7.2K",
-    products: "products",
-    icon: Check,
-    type: "checklist",
-  },
-  {
-    title: "Spreadsheet",
-    count: "6.1K",
-    products: "products",
-    icon: Table2,
-    type: "spreadsheet",
-  },
-  {
-    title: "Template",
-    count: "5.6K",
-    products: "products",
-    icon: LayoutGrid,
-    type: "template",
-  },
-  {
-    title: "Prompt Pack",
-    count: "4.8K",
-    products: "products",
-    icon: Bot,
-    type: "prompt",
-  },
-  {
-    title: "Mini Course",
-    count: "4.2K",
-    products: "products",
-    icon: GraduationCap,
-    type: "course",
-  },
-  {
-    title: "Challenge",
-    count: "3.9K",
-    products: "products",
-    icon: Flame,
-    type: "challenge",
-  },
-  {
-    title: "Ebook",
-    count: "3.2K",
-    products: "products",
-    icon: BookOpen,
-    type: "ebook",
-  },
-  {
-    title: "Worksheet",
-    count: "2.7K",
-    products: "products",
-    icon: FileText,
-    type: "worksheet",
-  },
-];
-
-const topProductsData = [
-  {
-    rank: 1,
-    title: "Digital Marketing Mastery Guide",
-    type: "Guide",
-    sales: "2.4K",
-    revenue: "$12.5K",
-    tone: "purple",
-  },
-  {
-    rank: 2,
-    title: "AI Content Creation Prompts",
-    type: "Prompt Pack",
-    sales: "1.8K",
-    revenue: "$9.2K",
-    tone: "blue",
-  },
-  {
-    rank: 3,
-    title: "90-Day Business Challenge",
-    type: "Challenge",
-    sales: "1.6K",
-    revenue: "$7.8K",
-    tone: "orange",
-  },
-  {
-    rank: 4,
-    title: "Productivity Planner 2024",
-    type: "Planner",
-    sales: "1.4K",
-    revenue: "$6.9K",
-    tone: "blue",
-  },
-  {
-    rank: 5,
-    title: "Freelancer Income Tracker",
-    type: "Spreadsheet",
-    sales: "1.2K",
-    revenue: "$5.6K",
-    tone: "green",
-  },
-];
-
-const nichesData = [
-  {
-    name: "Health & Fitness",
-    value: "23.4K products",
-    icon: Heart,
-    tone: "purple",
-  },
-  {
-    name: "Business & Money",
-    value: "18.7K products",
-    icon: Library,
-    tone: "green",
-  },
-  {
-    name: "Personal Development",
-    value: "15.2K products",
-    icon: Lightbulb,
-    tone: "orange",
-  },
-  {
-    name: "AI & Technology",
-    value: "12.1K products",
-    icon: Sparkles,
-    tone: "blue",
-  },
-  { name: "Marketing", value: "9.8K products", icon: Link2, tone: "yellow" },
-];
-
-const marketChartData = [
-  { day: "Mon", sales: 45, revenue: 32, orders: 28 },
-  { day: "Tue", sales: 62, revenue: 48, orders: 35 },
-  { day: "Wed", sales: 38, revenue: 25, orders: 22 },
-  { day: "Thu", sales: 71, revenue: 55, orders: 42 },
-  { day: "Fri", sales: 56, revenue: 42, orders: 31 },
-  { day: "Sat", sales: 83, revenue: 68, orders: 49 },
-  { day: "Sun", sales: 94, revenue: 76, orders: 55 },
-];
-
-const categoryData = [
-  { name: "Guides", value: 87, color: "#FACC15" },
-  { name: "Workbooks", value: 56, color: "#e5b800" },
-  { name: "Planners", value: 47, color: "#f5d742" },
-  { name: "Checklists", value: 31, color: "#f7c936" },
-  { name: "Spreadsheets", value: 25, color: "#4bc38a" },
-  { name: "Others", value: 66, color: "#dfe2e7" },
-];
-
-const platformConfig = {
-  books: {
-    label: "Books",
-    icon: BookOpen,
-    color: "#4a6cf7",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-  },
-  gumroad: {
-    label: "Gumroad",
-    icon: ShoppingCart,
-    color: "#f78b2c",
-    bg: "bg-orange-50",
-    border: "border-orange-200",
-  },
-  payhip: {
-    label: "Payhip",
-    icon: Store,
-    color: "#4a6cf7",
-    bg: "bg-indigo-50",
-    border: "border-indigo-200",
-  },
-  etsy: {
-    label: "Etsy",
-    icon: ShoppingBag,
-    color: "#f4581b",
-    bg: "bg-red-50",
-    border: "border-red-200",
-  },
-  shopify: {
-    label: "Shopify",
-    icon: LayoutGrid,
-    color: "#5e8e3e",
-    bg: "bg-green-50",
-    border: "border-green-200",
-  },
-};
-
-const coverThemes = {
-  fitness: "from-[#2a8e7e] via-[#47aa94] to-[#1e766d]",
-  startup: "from-[#fff7e5] via-[#f1d98d] to-[#dfbb5b]",
-  prompts: "from-[#24103f] via-[#582273] to-[#190b2f]",
-  meal: "from-[#f5eee0] via-[#d8c6a6] to-[#f5eee8]",
-  productivity: "from-[#0f4b8b] via-[#2c69a2] to-[#103b6e]",
-  instagram: "from-[#f2eee7] via-[#f7f4ee] to-[#e6e2db]",
-};
-
-const quickActionsData = [
-  ["Create Product", Plus],
-  ["Browse Templates", LayoutGrid],
-  ["AI Generator", Sparkles],
-  ["Design Cover", FileImage],
-  ["Analytics", BarChart3],
-];
-
-const bestTone = {
-  guide: "bg-[#FACC15]/20 text-[#111820]",
-  workbook: "bg-[#effbf1] text-[#17a653]",
-  planner: "bg-[#fff0f4] text-[#ed3973]",
-  checklist: "bg-[#edfbf2] text-[#16a34a]",
-  spreadsheet: "bg-[#e9faff] text-[#0e9ab5]",
-  template: "bg-[#FACC15]/20 text-[#111820]",
-  prompt: "bg-[#FACC15]/20 text-[#111820]",
-  course: "bg-[#FACC15]/20 text-[#111820]",
-  challenge: "bg-[#fff2e9] text-[#f36b20]",
-  ebook: "bg-[#FACC15]/20 text-[#111820]",
-  worksheet: "bg-[#FACC15]/20 text-[#111820]",
-};
-
-const badgeTone = {
-  Guide: "bg-[#FACC15]/20 text-[#111820]",
-  "Prompt Pack": "bg-[#FACC15]/20 text-[#111820]",
-  Challenge: "bg-[#fff0df] text-[#f07828]",
-  Planner: "bg-[#eef6ff] text-[#3f83ee]",
-  Spreadsheet: "bg-[#e9fbf1] text-[#22a15b]",
+const getImageUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  return `${SERVER_URL}${path}`;
 };
 
 // ================================================================
-// HELPER FUNCTIONS
+// STATIC DATA
 // ================================================================
+const quickActions = [
+  { title: "Create New Podcast", sub: "Start from scratch with AI", icon: Plus },
+  { title: "Browse Templates", sub: "Explore 50+ podcast templates", icon: LayoutGrid },
+  { title: "Create AI Shorts", sub: "Turn podcasts into viral shorts", icon: Sparkles },
+  { title: "Brand Kit", sub: "Customize your brand style", icon: Images },
+];
 
-const getTheme = (productType) => {
-  const themeMap = {
-    guide: "startup",
-    workbook: "meal",
-    planner: "productivity",
-    checklists: "fitness",
-    "prompt-packs": "prompts",
-    templates: "instagram",
-    challenges: "fitness",
-    ebook: "startup",
-    worksheets: "productivity",
-    spreadsheets: "productivity",
-    "mini-courses": "prompts",
-  };
-  return themeMap[productType?.toLowerCase()] || "fitness";
+const socials = [
+  { name: "YouTube", count: 22, icon: "▶", color: "text-red-500" },
+  { name: "TikTok", count: 16, icon: "♪", color: "text-white" },
+  { name: "Instagram", count: 8, icon: "◎", color: "text-pink-500" },
+  { name: "Facebook", count: 2, icon: "f", color: "text-blue-500" },
+];
+
+// ================================================================
+// CHART DATA
+// ================================================================
+const PLATFORM_DATA = [
+  { name: "YouTube", value: 38, color: "#ff3838" },
+  { name: "Spotify", value: 26, color: "#1DB954" },
+  { name: "Apple", value: 18, color: "#9933CC" },
+  { name: "Amazon", value: 11, color: "#25D1DA" },
+  { name: "Google", value: 7, color: "#4285F4" },
+];
+
+// Line chart series — daily plays for the last 7 days
+const LINE_SERIES = {
+  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  series: [
+    { name: "YouTube", color: "#ff3838", data: [42, 55, 48, 68, 82, 95, 110] },
+    { name: "Spotify", color: "#1DB954", data: [28, 35, 40, 52, 60, 72, 88] },
+    { name: "TikTok", color: "#25f4ee", data: [18, 24, 30, 42, 55, 68, 84] },
+  ],
 };
 
-const ProductCover = ({
-  theme = "fitness",
-  small = false,
-  coverImage = null,
-  title = "",
-}) => {
-  const size = small ? "h-[50px]" : "h-[180px]";
-  const shadow = small ? "shadow-sm" : "shadow-md";
+// ================================================================
+// ANIMATED LINE CHART
+// ================================================================
+function AnimatedLineChart({ title, height = 220 }) {
+  const [progress, setProgress] = useState(0);
+  const [hovered, setHovered] = useState(null);
+  const rafRef = useRef(null);
 
-  if (coverImage) {
-    const imageUrl = coverImage.startsWith("http")
-      ? coverImage
-      : `${SERVER_URL}${coverImage}`;
-    return (
-      <div
-        className={`${size} relative shrink-0 overflow-hidden rounded-md ${shadow} bg-gray-100`}
-      >
-        <img
-          src={imageUrl}
-          alt={title || "Product"}
-          className="w-full h-full object-cover"
-          crossOrigin="anonymous"
-          onError={(e) => {
-            e.target.style.display = "none";
-            const parent = e.target.parentElement;
-            if (parent) {
-              parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-4xl bg-gray-100">📚</div>`;
-            }
-          }}
-        />
-      </div>
-    );
-  }
+  useEffect(() => {
+    const duration = 1400;
+    const start = performance.now();
+    const animate = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      setProgress(eased);
+      if (t < 1) rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
-  const themeClass = coverThemes[theme] || coverThemes.fitness;
-  const headline = {
-    fitness: "FITNESS\nCHALLENGE",
-    startup: "STARTUP\nGUIDE",
-    prompts: "AI\nPROMPTS",
-    meal: "MEAL PLAN\nWORKBOOK",
-    productivity: "PRODUCTIVITY\nPLANNER",
-    instagram: "INSTAGRAM\nGROWTH",
-  }[theme];
+  const width = 500;
+  const padL = 44;
+  const padR = 18;
+  const padT = 20;
+  const padB = 32;
+  const innerW = width - padL - padR;
+  const innerH = height - padT - padB;
+
+  const allValues = LINE_SERIES.series.flatMap((s) => s.data);
+  const maxY = Math.ceil(Math.max(...allValues) / 20) * 20;
+  const labels = LINE_SERIES.labels;
+
+  const xFor = (i) => padL + (i / (labels.length - 1)) * innerW;
+  const yFor = (v) => padT + innerH - (v / maxY) * innerH;
 
   return (
     <div
-      className={`${size} relative shrink-0 overflow-hidden rounded-md bg-gradient-to-br ${themeClass} ${shadow} transition-transform duration-300 hover:scale-105`}
+      className="rounded-[12px] p-4 transition-all duration-300 hover:-translate-y-[2px]"
+      style={{
+        background: "linear-gradient(180deg, rgba(4,26,53,.55), rgba(3,17,38,.75))",
+        border: "1px solid rgba(80,150,255,.25)",
+        boxShadow: "0 8px 24px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.05) inset",
+      }}
     >
-      <div className="absolute inset-x-0 top-0 h-1 bg-white/30" />
-      <div
-        className={`absolute whitespace-pre-line px-2 font-bold leading-[1.1] tracking-[-0.02em] ${
-          small ? "top-1 text-[6px]" : "top-3 text-[14px]"
-        } ${theme === "startup" || theme === "meal" || theme === "instagram" ? "text-[#161a1e]" : "text-white"}`}
-      >
-        {headline}
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[13.5px] font-semibold text-[#eaf1ff]">{title}</h3>
+        <div className="flex items-center gap-3">
+          {LINE_SERIES.series.map((s) => (
+            <div key={s.name} className="flex items-center gap-1.5">
+              <span
+                className="w-[8px] h-[8px] rounded-full"
+                style={{ background: s.color, boxShadow: `0 0 6px ${s.color}` }}
+              />
+              <span className="text-[10.5px] text-[#aebfd5]">{s.name}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      {!small && (
-        <div className="absolute bottom-2 left-2 h-1 w-6 rounded-full bg-white/40" />
-      )}
+
+      {/* Chart */}
+      <div className="relative w-full" style={{ height }}>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="none"
+          className="w-full h-full"
+        >
+          {/* Grid */}
+          {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+            const y = padT + innerH * t;
+            return (
+              <line
+                key={i}
+                x1={padL}
+                x2={width - padR}
+                y1={y}
+                y2={y}
+                stroke="rgba(80,150,255,.1)"
+                strokeDasharray="3 4"
+              />
+            );
+          })}
+
+          {/* Y axis labels */}
+          {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+            const y = padT + innerH * t;
+            const value = Math.round(maxY * (1 - t));
+            return (
+              <text
+                key={i}
+                x={padL - 8}
+                y={y + 3}
+                textAnchor="end"
+                fontSize="9.5"
+                fill="#7d8fa8"
+              >
+                {value}
+              </text>
+            );
+          })}
+
+          {/* X axis labels */}
+          {labels.map((label, i) => (
+            <text
+              key={i}
+              x={xFor(i)}
+              y={height - 10}
+              textAnchor="middle"
+              fontSize="10"
+              fill="#7d8fa8"
+            >
+              {label}
+            </text>
+          ))}
+
+          {/* Series */}
+          {LINE_SERIES.series.map((s, sIdx) => {
+            // Build the path with progress
+            const totalLen = labels.length - 1;
+            const visibleLen = totalLen * progress;
+
+            const points = [];
+            for (let i = 0; i <= visibleLen; i++) {
+              const x = xFor(i);
+              const y = yFor(s.data[i]);
+              points.push([x, y]);
+            }
+
+            // Partial last segment for smooth draw-in
+            if (visibleLen < totalLen && Math.floor(visibleLen) < totalLen) {
+              const i0 = Math.floor(visibleLen);
+              const frac = visibleLen - i0;
+              const x0 = xFor(i0);
+              const y0 = yFor(s.data[i0]);
+              const x1 = xFor(i0 + 1);
+              const y1 = yFor(s.data[i0 + 1]);
+              points.push([x0 + (x1 - x0) * frac, y0 + (y1 - y0) * frac]);
+            }
+
+            const pathD = points
+              .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x} ${y}`)
+              .join(" ");
+
+            // Fill area under line
+            const areaD =
+              pathD +
+              ` L ${points[points.length - 1][0]} ${padT + innerH}` +
+              ` L ${points[0][0]} ${padT + innerH} Z`;
+
+            return (
+              <g key={s.name}>
+                {/* Soft area fill */}
+                <path
+                  d={areaD}
+                  fill={s.color}
+                  opacity={0.08}
+                  style={{ transition: "opacity .3s" }}
+                />
+                {/* Line */}
+                <path
+                  d={pathD}
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth={hovered === sIdx ? 3 : 2.2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{
+                    filter: `drop-shadow(0 0 6px ${s.color}80)`,
+                    transition: "stroke-width .2s",
+                  }}
+                />
+                {/* Points */}
+                {labels.map((_, i) => {
+                  if (i > visibleLen) return null;
+                  const x = xFor(i);
+                  const y = yFor(s.data[i]);
+                  return (
+                    <circle
+                      key={i}
+                      cx={x}
+                      cy={y}
+                      r={hovered === sIdx ? 4.5 : 3}
+                      fill="#04101f"
+                      stroke={s.color}
+                      strokeWidth={2}
+                      style={{ transition: "r .2s" }}
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Footer stats */}
+      <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: "1px solid rgba(80,150,255,.1)" }}>
+        <span className="text-[10px] text-[#7d8fa8]">Last 7 days</span>
+        <span className="text-[10.5px] font-semibold text-[#4ef0ae]">
+          ↗ +34% this week
+        </span>
+      </div>
     </div>
   );
-};
+}
+
+// ================================================================
+// ANIMATED DONUT
+// ================================================================
+function AnimatedDonut({ data, size = 200, thickness = 24, title }) {
+  const [progress, setProgress] = useState(0);
+  const [hovered, setHovered] = useState(null);
+  const [animatedValues, setAnimatedValues] = useState(data.map(() => 0));
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const duration = 1400;
+    const start = performance.now();
+    const animate = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      setProgress(eased);
+      setAnimatedValues(data.map((d) => d.value * eased));
+      if (t < 1) rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [data]);
+
+  const total = data.reduce((a, b) => a + b.value, 0) || 1;
+  const radius = size / 2 - thickness / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  let cumulative = 0;
+  const arcs = data.map((d, i) => {
+    const fraction = d.value / total;
+    const arcLength = circumference * fraction * progress;
+    const dash = `${arcLength} ${circumference - arcLength}`;
+    const offset = -cumulative * circumference * progress;
+    cumulative += fraction;
+    return { ...d, dash, offset, index: i };
+  });
+
+  return (
+    <div
+      className="rounded-[12px] p-4 transition-all duration-300 hover:-translate-y-[2px]"
+      style={{
+        background: "linear-gradient(180deg, rgba(4,26,53,.55), rgba(3,17,38,.75))",
+        border: "1px solid rgba(80,150,255,.25)",
+        boxShadow: "0 8px 24px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.05) inset",
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[13.5px] font-semibold text-[#eaf1ff]">{title}</h3>
+        <span
+          className="text-[9.5px] font-semibold tracking-[0.5px] px-2 py-[3px] rounded-full"
+          style={{
+            background: "rgba(110,53,237,.2)",
+            border: "1px solid rgba(150,120,255,.4)",
+            color: "#c9b5ff",
+          }}
+        >
+          LIVE
+        </span>
+      </div>
+
+      <div className="flex items-center gap-5 flex-wrap sm:flex-nowrap">
+        {/* Donut */}
+        <div className="relative shrink-0" style={{ width: size, height: size }}>
+          <svg width={size} height={size} className="transform -rotate-90">
+            <circle
+              cx={cx}
+              cy={cy}
+              r={radius}
+              fill="none"
+              stroke="rgba(80,150,255,.08)"
+              strokeWidth={thickness}
+            />
+
+            {arcs.map((arc) => (
+              <circle
+                key={arc.index}
+                cx={cx}
+                cy={cy}
+                r={radius}
+                fill="none"
+                stroke={arc.color}
+                strokeWidth={hovered === arc.index ? thickness + 4 : thickness}
+                strokeLinecap="round"
+                strokeDasharray={arc.dash}
+                strokeDashoffset={arc.offset}
+                style={{
+                  filter:
+                    hovered === arc.index
+                      ? `drop-shadow(0 0 12px ${arc.color})`
+                      : `drop-shadow(0 0 4px ${arc.color}40)`,
+                  transition: "stroke-width .2s ease, filter .2s ease",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={() => setHovered(arc.index)}
+                onMouseLeave={() => setHovered(null)}
+              />
+            ))}
+          </svg>
+
+          <div className="absolute inset-0 grid place-items-center pointer-events-none">
+            {hovered !== null ? (
+              <div className="text-center">
+                <div className="text-[11px] font-semibold" style={{ color: data[hovered].color }}>
+                  {data[hovered].name}
+                </div>
+                <div className="text-[24px] font-bold leading-tight" style={{ color: "#eaf1ff" }}>
+                  {Math.round(animatedValues[hovered])}%
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="text-[10px] uppercase tracking-[0.5px] text-[#7d8fa8]">Total</div>
+                <div className="text-[24px] font-bold text-[#eaf1ff] leading-tight">100%</div>
+                <div className="text-[9px] text-[#7d8fa8] mt-0.5">
+                  {data.length} platforms
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="flex-1 min-w-0 space-y-1.5">
+          {data.map((d, i) => (
+            <div
+              key={d.name}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              className="flex items-center gap-2.5 px-2 py-1 rounded-md cursor-pointer transition-colors"
+              style={{
+                background: hovered === i ? "rgba(110,53,237,.12)" : "transparent",
+              }}
+            >
+              <span
+                className="w-[8px] h-[8px] rounded-full shrink-0"
+                style={{ background: d.color, boxShadow: `0 0 8px ${d.color}` }}
+              />
+              <span className="text-[11.5px] text-[#c9d5e8] flex-1 truncate">
+                {d.name}
+              </span>
+              <span
+                className="text-[11.5px] font-semibold tabular-nums"
+                style={{ color: d.color }}
+              >
+                {Math.round(animatedValues[i])}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// TRENDING CATEGORIES (unchanged)
+// ================================================================
+function TrendingCategories() {
+  const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("/categories");
+        if (!cancelled) setCategories((res.data?.data || []).slice(0, 4));
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+        if (!cancelled) setCategories([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchCategories();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <section>
+        <div className="flex justify-between items-center mb-[15px] h-[24px]">
+          <h2 className="text-[18px] font-bold text-[#edf4ff]">Trending Categories</h2>
+          <span className="text-[13px] text-[#91a9c8] cursor-pointer">View all →</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[12px]">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-[160px] rounded-[9px] bg-[#0a1b36] animate-pulse" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (categories.length === 0) {
+    return (
+      <section>
+        <div className="flex justify-between items-center mb-[15px] h-[24px]">
+          <h2 className="text-[18px] font-bold text-[#edf4ff]">Trending Categories</h2>
+          <span className="text-[13px] text-[#91a9c8] cursor-pointer">View all →</span>
+        </div>
+        <div className="border border-[#17385f] rounded-[10px] bg-gradient-to-b from-[#06162b] to-[#041124] p-8 text-center">
+          <p className="text-[13px] text-[#8198b6]">No categories yet.</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <div className="flex justify-between items-center mb-[15px] h-[24px]">
+        <h2 className="text-[18px] font-bold text-[#edf4ff]">Trending Categories</h2>
+        <span className="text-[13px] text-[#91a9c8] cursor-pointer hover:text-[#edf4ff] transition-colors">
+          View all →
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[12px]">
+        {categories.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => navigate(`/category/${cat.slug}`)}
+            className="group border border-[#173d6d] rounded-[9px] overflow-hidden bg-[#061427] flex flex-col text-left transition-all duration-200 hover:border-[#6b38ed] hover:-translate-y-[2px] hover:shadow-lg"
+          >
+            <div className="relative h-[170px]  shrink-0 bg-[#0a1b36] overflow-hidden">
+              {cat.image ? (
+                <img
+                  src={getImageUrl(cat.image)}
+                  alt={cat.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full grid place-items-center text-[28px] opacity-60">📁</div>
+              )}
+            </div>
+            <div className="p-[11px] flex flex-col flex-1">
+              <div className="text-[13px] font-semibold text-[#edf4ff] group-hover:text-[#a080ff] transition-colors leading-[1.35]">
+                {cat.name}
+              </div>
+              {cat.description && (
+                <p className="text-[11px] text-[#8198b6] mt-[6px] leading-[1.4] line-clamp-2">
+                  {cat.description}
+                </p>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 // ================================================================
 // MAIN DASHBOARD
 // ================================================================
-
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [trendingProducts, setTrendingProducts] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [platformData, setPlatformData] = useState({});
-  const [platformLoading, setPlatformLoading] = useState(true);
-
-  // Refs for scrollable sections
-  const trendingScrollRef = useRef(null);
-  const [showLeftTrendingArrow, setShowLeftTrendingArrow] = useState(false);
-  const [showRightTrendingArrow, setShowRightTrendingArrow] = useState(false);
-
-  const featuredScrollRef = useRef(null);
-  const [showLeftFeaturedArrow, setShowLeftFeaturedArrow] = useState(false);
-  const [showRightFeaturedArrow, setShowRightFeaturedArrow] = useState(false);
-
-  useEffect(() => {
-    fetchAllProducts();
-    fetchPlatforms();
-  }, []);
-
-  // ✅ SCROLL HANDLERS FOR TRENDING - BOTH ARROWS ALWAYS SHOW
-  // ================================================================
-  // SCROLL HANDLERS - FIXED
-  // ================================================================
-
-  // ✅ SCROLL HANDLERS FOR TRENDING - FIXED
-  useEffect(() => {
-    // Wait for DOM to render
-    const timer = setTimeout(() => {
-      const container = trendingScrollRef.current;
-      if (container) {
-        const checkScroll = () => {
-          const isScrollable = container.scrollWidth > container.clientWidth;
-          console.log(
-            "Trending - isScrollable:",
-            isScrollable,
-            "scrollWidth:",
-            container.scrollWidth,
-            "clientWidth:",
-            container.clientWidth,
-          );
-
-          if (isScrollable) {
-            setShowLeftTrendingArrow(true);
-            setShowRightTrendingArrow(true);
-          } else {
-            setShowLeftTrendingArrow(false);
-            setShowRightTrendingArrow(false);
-          }
-        };
-
-        checkScroll();
-        container.addEventListener("scroll", checkScroll);
-        window.addEventListener("resize", checkScroll);
-
-        return () => {
-          container.removeEventListener("scroll", checkScroll);
-          window.removeEventListener("resize", checkScroll);
-        };
-      }
-    }, 300); // ✅ Delay to ensure DOM is ready
-
-    return () => clearTimeout(timer);
-  }, [trendingProducts]);
-
-  // ✅ SCROLL HANDLERS FOR FEATURED - FIXED
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const container = featuredScrollRef.current;
-      if (container) {
-        const checkScroll = () => {
-          const isScrollable = container.scrollWidth > container.clientWidth;
-          console.log(
-            "Featured - isScrollable:",
-            isScrollable,
-            "scrollWidth:",
-            container.scrollWidth,
-            "clientWidth:",
-            container.clientWidth,
-          );
-
-          if (isScrollable) {
-            setShowLeftFeaturedArrow(true);
-            setShowRightFeaturedArrow(true);
-          } else {
-            setShowLeftFeaturedArrow(false);
-            setShowRightFeaturedArrow(false);
-          }
-        };
-
-        checkScroll();
-        container.addEventListener("scroll", checkScroll);
-        window.addEventListener("resize", checkScroll);
-
-        return () => {
-          container.removeEventListener("scroll", checkScroll);
-          window.removeEventListener("resize", checkScroll);
-        };
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [featuredProducts]);
-
-  const scrollTrending = (direction) => {
-    const container = trendingScrollRef.current;
-    if (container) {
-      const scrollAmount =
-        direction === "left" ? -container.clientWidth : container.clientWidth;
-      container.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
-
-  const scrollFeatured = (direction) => {
-    const container = featuredScrollRef.current;
-    if (container) {
-      const scrollAmount =
-        direction === "left" ? -container.clientWidth : container.clientWidth;
-      container.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
-
-  const fetchAllProducts = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/platforms/trending/all");
-      const allData = response.data?.data || [];
-      setTrendingProducts(allData);
-      try {
-        const featuredRes = await api.get("/platforms/featured");
-        const featuredData = featuredRes.data?.data || [];
-        setFeaturedProducts(featuredData);
-      } catch (err) {
-        setFeaturedProducts(allData.slice(0, 6));
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setTrendingProducts([]);
-      setFeaturedProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPlatforms = async () => {
-    try {
-      setPlatformLoading(true);
-      const response = await api.get("/platforms");
-      const data = response.data?.data?.byPlatform || {};
-      setPlatformData(data);
-    } catch (error) {
-      console.error("Error fetching platforms:", error);
-      setPlatformData({});
-    } finally {
-      setPlatformLoading(false);
-    }
-  };
 
   return (
-    <div className="flex min-h-screen bg-[#f5f6f8]">
+    <div className="flex min-h-screen bg-[#020713]">
       <Sidebar />
-      <div className="flex-1 ml-0 md:ml-[18rem] flex flex-col min-h-screen">
+
+      <div className="flex-1 ml-0 md:ml-[18rem] flex flex-col min-h-screen bg-[#020713]">
         <Navbar />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          <div className="flex flex-col lg:flex-row gap-6 w-full max-w-full">
-            {/* ===== LEFT COLUMN (70-75%) ===== */}
-            <div className="flex-1 min-w-0">
-              {/* ===== BANNER ===== */}
-              <div className="mb-6">
-                <div className="relative rounded-xl overflow-hidden shadow-lg p-6 md:p-8">
-                  <div
-                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                    style={{ backgroundImage: `url(${bannerBg})` }}
-                  ></div>
 
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-transparent"></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0f3460]/20"></div>
-
-                  <div className="absolute inset-0 opacity-5">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#FACC15] rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#FACC15] rounded-full blur-3xl"></div>
-                  </div>
-
-                  <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 z-10">
-                    <div className="flex-1 text-center md:text-left md:w-[55%]">
-                      <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-                        <span className="px-4 py-1.5 bg-[#FACC15]/20 text-[#FACC15] text-[12px] font-bold rounded-full border border-[#FACC15]/30">
-                          ✨ AI POWERED
-                        </span>
-                        <span className="px-4 py-1.5 bg-[#FACC15]/20 text-[#FACC15] text-[12px] font-bold rounded-full border border-[#FACC15]/30">
-                          🚀 GROWTH
-                        </span>
-                      </div>
-
-                      <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-                        Hello, {user?.name || "Admin"}! 👋
-                      </h2>
-                      <p className="text-[#FACC15] text-xl md:text-2xl font-semibold mt-2">
-                        Build Your Etsy Empire, <br className="sm:hidden" />
-                        One Collection at a Time
-                      </p>
-                      <p className="text-gray-300 text-base md:text-lg mt-3 max-w-xl">
-                        AI finds profitable niches, creates stunning designs,{" "}
-                        <br className="hidden sm:block" />
-                        and publishes printables to Etsy that sell.
-                      </p>
-
-                      <button
-                        onClick={() => navigate("/create-product")}
-                        className="mt-5 px-8 py-3 bg-[#FACC15] hover:bg-[#e5b800] text-[#111820] font-semibold text-base rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto md:mx-0"
-                      >
-                        <Sparkles size={20} />
-                        Find My Next Profitable Niche →
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#FACC15]/5 rounded-full blur-2xl"></div>
-                  <div className="absolute bottom-0 left-1/2 w-48 h-48 bg-[#FACC15]/5 rounded-full blur-2xl"></div>
-                </div>
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto">
+          {/* HERO BANNER */}
+          <section
+            className="relative border border-[#153c6d] rounded-[10px] overflow-hidden"
+            style={{
+              background:
+                "linear-gradient(105deg, #020b1b 0%, #03112b 52%, #040b20 100%)",
+            }}
+          >
+            <div
+              className="absolute inset-y-0 right-0 w-[62%] md:w-[55%]"
+              style={{
+                backgroundImage: `url(${bannerBg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center right",
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(90deg, #020b1a 0%, #020b1a 30%, rgba(3,17,43,.95) 45%, rgba(3,17,43,.6) 65%, rgba(3,17,43,.2) 82%, transparent 100%)",
+              }}
+            />
+            <div className="relative z-10 py-10 md:py-12 pl-7 pr-7 max-w-[720px]">
+              <div className="text-[13px] tracking-[1.8px] text-[#9c65ff] font-medium">
+                WELCOME BACK, {(user?.name || "ADIT").toUpperCase()}
               </div>
-
-              {/* ===== PLATFORM TRENDING ===== */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-                  <div className="flex items-center gap-3">
-                    <TrendingUp
-                      size={22}
-                      className="text-[#FACC15]"
-                      strokeWidth={2.2}
-                    />
-                    <h2 className="text-xl font-bold text-[#172033]">
-                      Trending Across Platforms
-                    </h2>
-                    <span className="text-[13px] text-[#89919d]">
-                      Most popular products by platform
-                    </span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {["books", "gumroad", "etsy", "shopify"].map((platform) => {
-                    const config = platformConfig[platform];
-                    const Icon = config.icon;
-                    const products = platformData[platform] || [];
-
-                    const platformScrollRef = useRef(null);
-                    const [showLeftArrow, setShowLeftArrow] = useState(false);
-                    const [showRightArrow, setShowRightArrow] = useState(false);
-
-                    useEffect(() => {
-                      const container = platformScrollRef.current;
-                      if (container) {
-                        const checkScroll = () => {
-                          const isScrollable =
-                            container.scrollWidth > container.clientWidth;
-                          if (isScrollable) {
-                            setShowLeftArrow(true);
-                            setShowRightArrow(true);
-                          } else {
-                            setShowLeftArrow(false);
-                            setShowRightArrow(false);
-                          }
-                        };
-
-                        setTimeout(checkScroll, 100);
-                        container.addEventListener("scroll", checkScroll);
-                        window.addEventListener("resize", checkScroll);
-
-                        return () => {
-                          container.removeEventListener("scroll", checkScroll);
-                          window.removeEventListener("resize", checkScroll);
-                        };
-                      }
-                    }, [products]);
-
-                    const scrollPlatform = (direction) => {
-                      const container = platformScrollRef.current;
-                      if (container) {
-                        const scrollAmount = direction === "left" ? -300 : 300;
-                        container.scrollBy({
-                          left: scrollAmount,
-                          behavior: "smooth",
-                        });
-                      }
-                    };
-
-                    return (
-                      <div
-                        key={platform}
-                        className="rounded-xl border border-[#edf0f4] bg-white p-4 shadow-sm"
-                      >
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className={`p-2.5 rounded-lg ${config.bg}`}>
-                            <Icon size={20} className="text-[#111820]" />
-                          </div>
-                          <div>
-                            <h3 className="text-[15px] font-bold text-[#172033]">
-                              {config.label}
-                            </h3>
-                            <span className="text-[11px] text-[#89919d]">
-                              Trending products
-                            </span>
-                          </div>
-                          <button className="ml-auto text-[11px] font-semibold text-[#FACC15] hover:text-[#e5b800] transition-colors duration-200">
-                            View All
-                          </button>
-                        </div>
-
-                        {platformLoading ? (
-                          <div className="flex justify-center py-6">
-                            <div className="w-6 h-6 border-3 border-[#FACC15] border-t-transparent rounded-full animate-spin"></div>
-                          </div>
-                        ) : products.length === 0 ? (
-                          <div className="text-center py-6 text-[#6B7280]">
-                            <p className="text-[12px]">No products available</p>
-                          </div>
-                        ) : (
-                          <div className="relative">
-                            {showLeftArrow && (
-                              <button
-                                onClick={() => scrollPlatform("left")}
-                                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-full bg-white shadow-md border border-[#E5E7EB] hover:bg-[#F8F8F6] hover:border-[#FACC15] transition-all duration-200 -ml-2"
-                              >
-                                <ChevronLeft
-                                  size={18}
-                                  className="text-[#6B7280]"
-                                />
-                              </button>
-                            )}
-
-                            <div
-                              ref={platformScrollRef}
-                              className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar px-2"
-                              style={{
-                                scrollbarWidth: "none",
-                                msOverflowStyle: "none",
-                              }}
-                            >
-                              {products.slice(0, 5).map((product) => (
-                                <div
-                                  key={
-                                    product._id || product.id || product.title
-                                  }
-                                  className="group relative flex-shrink-0 w-[180px] sm:w-[200px] cursor-pointer transition-all duration-300"
-                                >
-                                  {/* ===== AMAZON-STYLE CARD ===== */}
-                                  <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-                                    {/* ===== PRODUCT IMAGE ===== */}
-                                    <div className="relative aspect-square bg-white p-4 flex items-center justify-center overflow-hidden">
-                                      <ProductCover
-                                        theme={getTheme(product.productType)}
-                                        coverImage={
-                                          product.coverImage || product.coverUrl
-                                        }
-                                        title={product.title}
-                                      />
-
-                                      {/* ===== BADGES ===== */}
-                                      <div className="absolute top-2 left-2 flex flex-col gap-1">
-                                        {product.bestSeller && (
-                                          <span className="px-2 py-0.5 bg-[#FACC15] text-[#111820] text-[8px] font-bold rounded-full shadow-sm">
-                                            Best Seller
-                                          </span>
-                                        )}
-                                        {product.discount && (
-                                          <span className="px-2 py-0.5 bg-red-500 text-white text-[8px] font-bold rounded-full shadow-sm">
-                                            -{product.discount}%
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* ===== PRODUCT INFO ===== */}
-                                    <div className="p-3 space-y-1.5">
-                                      {/* ===== RATING ===== */}
-                                      <div className="flex items-center gap-1">
-                                        <div className="flex items-center">
-                                          <Star
-                                            size={12}
-                                            className="fill-[#FACC15] text-[#FACC15]"
-                                          />
-                                          <Star
-                                            size={12}
-                                            className="fill-[#FACC15] text-[#FACC15]"
-                                          />
-                                          <Star
-                                            size={12}
-                                            className="fill-[#FACC15] text-[#FACC15]"
-                                          />
-                                          <Star
-                                            size={12}
-                                            className="fill-[#FACC15] text-[#FACC15]"
-                                          />
-                                          <Star
-                                            size={12}
-                                            className="fill-[#FACC15] text-[#FACC15]"
-                                          />
-                                        </div>
-                                        <span className="text-[10px] font-medium text-[#6B7280]">
-                                          {product.rating || 4.5}
-                                        </span>
-                                        <span className="text-[10px] text-[#6B7280]">
-                                          (
-                                          {product.reviews ||
-                                            product.reviewCount ||
-                                            0}
-                                          )
-                                        </span>
-                                      </div>
-
-                                      {/* ===== TITLE ===== */}
-                                      <h3 className="text-[14px] font-medium text-[#111111] line-clamp-2 leading-snug min-h-[36px] group-hover:text-[#FACC15] transition-colors duration-200">
-                                        {product.title}
-                                      </h3>
-
-                                      {/* ===== PRICE ===== */}
-                                      <div className="flex items-end gap-2">
-                                        <span className="text-[18px] font-bold text-[#111827]">
-                                          ${product.price || "0"}
-                                        </span>
-                                        {product.originalPrice && (
-                                          <span className="text-[12px] text-[#6B7280] line-through">
-                                            ${product.originalPrice}
-                                          </span>
-                                        )}
-                                      </div>
-
-                                      {/* ===== BUY BUTTON ===== */}
-                                      <button
-                                        onClick={() => {
-                                          navigate("/create-product", {
-                                            state: {
-                                              productData: {
-                                                title: product.title || "",
-                                                productType:
-                                                  product.productType ||
-                                                  "guide",
-                                                niche: product.niche || "",
-                                                audience:
-                                                  product.audience || "",
-                                                problem: product.problem || "",
-                                                outcome: product.outcome || "",
-                                                tone:
-                                                  product.tone ||
-                                                  "Professional",
-                                                language:
-                                                  product.language || "English",
-                                                coverImage:
-                                                  product.coverImage ||
-                                                  product.coverUrl ||
-                                                  "",
-                                                price: product.price || "",
-                                                description:
-                                                  product.description || "",
-                                                authorName:
-                                                  product.authorName || "",
-                                                brandName:
-                                                  product.brandName || "",
-                                              },
-                                              isEdit: true,
-                                            },
-                                          });
-                                        }}
-                                        className="w-full mt-1.5 py-1.5 bg-[#FACC15] hover:bg-[#e5b800] text-[#111820] text-[12px] font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-1.5"
-                                      >
-                                        <Plus size={13} />
-                                        Create
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                            {showRightArrow && (
-                              <button
-                                onClick={() => scrollPlatform("right")}
-                                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded-full bg-white shadow-md border border-[#E5E7EB] hover:bg-[#F8F8F6] hover:border-[#FACC15] transition-all duration-200 -mr-2"
-                              >
-                                <ChevronRight
-                                  size={18}
-                                  className="text-[#6B7280]"
-                                />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+              <h1 className="text-[32px] md:text-[40px] leading-[1.1] tracking-[-1.4px] font-semibold mt-3 text-[#eef4ff]">
+                Create Amazing Podcasts
+                <br />
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, #b65bff, #7855ff, #338dff)",
+                    WebkitBackgroundClip: "text",
+                  }}
+                >
+                  with the Power of AI.
+                </span>
+              </h1>
+              <p className="text-[14px] leading-[1.6] text-[#aebfd5] mt-4 max-w-[640px]">
+                Turn your ideas into professional podcast videos in minutes.
+                Choose a template, add your topic, and let AI do the magic — no
+                equipment, no editing required.
+              </p>
+              <div className="flex flex-wrap gap-3 mt-7">
+                <button
+                  onClick={() => navigate("/create-podcast")}
+                  className="h-[46px] px-6 rounded-[10px] text-white text-[13.5px] font-semibold transition-all duration-200 hover:brightness-110"
+                  style={{
+                    background: "linear-gradient(100deg, #6c36ed, #3477ff)",
+                    boxShadow: "0 8px 24px rgba(108,54,237,.35)",
+                  }}
+                >
+                  ＋ Create New Podcast
+                </button>
+                <button
+                  onClick={() => navigate("/templates")}
+                  className="h-[46px] px-6 rounded-[10px] text-[13.5px] transition-colors duration-200 hover:bg-[#0a2952]"
+                  style={{
+                    border: "1px solid #1d568e",
+                    background: "#061b37",
+                    color: "#dbe7f7",
+                  }}
+                >
+                  Browse Templates
+                </button>
               </div>
+            </div>
+          </section>
 
-              {/* ===== CHARTS ===== */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div className="rounded-xl border border-[#edf0f4] bg-white p-5 shadow-sm">
-                  <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-                    <div className="flex items-center gap-3">
-                      <TrendingUp
-                        size={22}
-                        className="text-[#FACC15]"
-                        strokeWidth={2.2}
-                      />
-                      <h2 className="text-xl font-bold text-[#172033]">
-                        Market Performance
-                      </h2>
-                      <span className="text-[13px] text-[#89919d]">
-                        This week
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-full bg-[#FACC15]" />
-                        <span className="text-[11px] text-[#6B7280]">
-                          Sales
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-full bg-[#e5b800]" />
-                        <span className="text-[11px] text-[#6B7280]">
-                          Revenue
-                        </span>
-                      </div>
-                      <span className="text-[12px] font-semibold text-[#16a34a]">
-                        ↑ 18.3%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="w-full" style={{ height: "220px" }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={marketChartData}
-                        margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient
-                            id="salesGrad"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="#FACC15"
-                              stopOpacity={0.3}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="#FACC15"
-                              stopOpacity={0.02}
-                            />
-                          </linearGradient>
-                          <linearGradient
-                            id="revenueGrad"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="#e5b800"
-                              stopOpacity={0.25}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="#e5b800"
-                              stopOpacity={0.02}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          vertical={false}
-                          stroke="#f0f2f5"
-                          strokeDasharray="3 3"
-                        />
-                        <XAxis
-                          dataKey="day"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 10, fill: "#9aa1ad" }}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 10, fill: "#9aa1ad" }}
-                          ticks={[0, 25, 50, 75, 100]}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: 10,
-                            border: "1px solid #edf0f4",
-                            fontSize: 12,
-                            backgroundColor: "#fff",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="sales"
-                          stroke="#FACC15"
-                          strokeWidth={2.5}
-                          fill="url(#salesGrad)"
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="revenue"
-                          stroke="#e5b800"
-                          strokeWidth={2.5}
-                          fill="url(#revenueGrad)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#f0f2f5]">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[12px] font-medium text-[#6B7280]">
-                          Total Sales:
-                        </span>
-                        <span className="text-[13px] font-bold text-[#111827]">
-                          449
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[12px] font-medium text-[#6B7280]">
-                          Revenue:
-                        </span>
-                        <span className="text-[13px] font-bold text-[#111827]">
-                          $346
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-[12px] font-medium text-[#16a34a]">
-                      ↑ 12.5% vs last week
-                    </span>
-                  </div>
-                </div>
+          {/* MAIN LAYOUT */}
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_385px] gap-[18px] mt-[21px]">
+            {/* LEFT COLUMN */}
+            <div className="min-w-0">
+              <TrendingCategories />
 
-                <div className="rounded-xl border border-[#edf0f4] bg-white p-5 shadow-sm">
-                  <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-                    <div className="flex items-center gap-3">
-                      <BarChart3
-                        size={22}
-                        className="text-[#FACC15]"
-                        strokeWidth={2.2}
-                      />
-                      <h2 className="text-xl font-bold text-[#172033]">
-                        Category Distribution
-                      </h2>
-                      <span className="text-[13px] text-[#89919d]">
-                        By product type
-                      </span>
-                    </div>
-                    <span className="text-[12px] font-medium text-[#6B7280]">
-                      Total: 312 products
-                    </span>
-                  </div>
-                  <div className="w-full" style={{ height: "200px" }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={categoryData}
-                        margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-                        layout="vertical"
-                      >
-                        <CartesianGrid horizontal={false} stroke="#f0f2f5" />
-                        <XAxis
-                          type="number"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 10, fill: "#9aa1ad" }}
-                        />
-                        <YAxis
-                          type="category"
-                          dataKey="name"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{
-                            fontSize: 11,
-                            fill: "#6B7280",
-                            fontWeight: 500,
-                          }}
-                          width={80}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: 10,
-                            border: "1px solid #edf0f4",
-                            fontSize: 12,
-                            backgroundColor: "#fff",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                          }}
-                          formatter={(value) => [`${value} products`, "Count"]}
-                        />
-                        <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={24}>
-                          {categoryData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+              {/* 👇 NEW — one line chart + one donut chart */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <AnimatedLineChart title="Podcast Plays — Last 7 Days" height={230} />
+                <AnimatedDonut
+                  data={PLATFORM_DATA}
+                  title="Trending Podcasts — Platform Split"
+                  size={180}
+                />
               </div>
             </div>
 
-            {/* ===== RIGHT SIDEBAR (25-30%) ===== */}
-            <div className="w-[300px] flex-shrink-0 space-y-4">
-              <div className="rounded-xl bg-gradient-to-br from-[#FACC15] to-[#e5b800] p-5 text-[#111820] shadow-lg">
-                <div className="flex justify-center">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/25">
-                    <Plus size={24} strokeWidth={2} />
-                  </div>
-                </div>
-                <h3 className="mt-3 text-center text-base font-bold">
-                  Create New Product
-                </h3>
-                <p className="mt-1.5 text-center text-[12px] leading-[1.4] text-[#111820]/80">
-                  Start creating your next digital product with AI
-                </p>
-                <button
-                  onClick={() => navigate("/create-product")}
-                  className="mt-3.5 flex h-10 w-full items-center justify-center rounded-lg bg-white text-[13px] font-bold text-[#111820] hover:shadow-md transition-all duration-200"
-                >
-                  <Plus size={15} className="mr-1.5" /> Create Now
-                </button>
-              </div>
-
-              <div className="rounded-xl border border-[#edf0f4] bg-white p-5 shadow-sm">
-                <h3 className="text-[15px] font-bold text-[#263043]">
-                  Quick Actions
-                </h3>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  {quickActionsData.map(([label, Icon]) => (
-                    <button
-                      key={label}
-                      onClick={() =>
-                        label === "Create Product" &&
-                        navigate("/create-product")
-                      }
-                      className="flex items-center gap-2 rounded-lg p-2.5 text-[12px] font-medium text-[#4d5664] hover:bg-[#FACC15]/10 transition-all duration-200"
-                    >
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FACC15]/20 text-[#111820]">
-                        <Icon size={16} strokeWidth={1.8} />
-                      </span>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-[#edf0f4] bg-white p-5 shadow-sm">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FACC15]/20 text-[#111820]">
-                    <Sparkles size={16} />
-                  </div>
-                  <h3 className="text-[15px] font-bold text-[#FACC15]">
-                    AI Insights
+            {/* RIGHT COLUMN */}
+            <aside className="min-w-0 flex flex-col gap-4">
+              <div>
+                <div className="hidden lg:block mb-[15px] h-[24px]" aria-hidden="true" />
+                <div className="border border-[#17385f] rounded-[10px] bg-gradient-to-b from-[#06162b] to-[#041124] p-[13px]">
+                  <h3 className="text-[16px] font-bold text-[#edf4ff] mb-[13px]">
+                    Quick Actions
                   </h3>
-                </div>
-                <p className="mt-2 text-[13px] leading-[1.6] text-[#687180]">
-                  Fitness, productivity and AI related products are trending
-                  this week.
-                </p>
-                <button className="mt-3.5 flex h-9 w-full items-center justify-center rounded-lg border-2 border-[#FACC15] text-[12px] font-semibold text-[#111820] hover:bg-[#FACC15] transition-all duration-200">
-                  Explore Trends
-                </button>
-              </div>
-
-              <div className="rounded-xl border border-[#edf0f4] bg-white p-5 shadow-sm">
-                <h3 className="text-[15px] font-bold text-[#263043]">
-                  Popular Niches
-                </h3>
-                <div className="mt-3 space-y-2.5">
-                  {nichesData.map((niche) => {
-                    const Icon = niche.icon;
+                  {quickActions.map((a, idx) => {
+                    const Icon = a.icon;
                     return (
                       <div
-                        key={niche.name}
-                        className="flex items-center gap-3 group cursor-pointer rounded-lg p-2 hover:bg-[#f8f9fb] transition-colors duration-200"
+                        key={idx}
+                        className="h-[62px] rounded-[9px] bg-[#0a1b36] mb-[8px] last:mb-0 flex items-center gap-[10px] px-[10px] cursor-pointer hover:bg-[#0c2043] transition-colors"
+                        onClick={() =>
+                          a.title === "Create New Podcast" && navigate("/create-product")
+                        }
                       >
                         <div
-                          className={[
-                            "flex h-8 w-8 items-center justify-center rounded-lg",
-                            niche.tone === "purple" &&
-                              "bg-[#f0ecff] text-[#704fe7]",
-                            niche.tone === "green" &&
-                              "bg-[#ebfbf1] text-[#1baa58]",
-                            niche.tone === "orange" &&
-                              "bg-[#fff0e4] text-[#f27828]",
-                            niche.tone === "blue" &&
-                              "bg-[#ebf5ff] text-[#3f82ec]",
-                            niche.tone === "yellow" &&
-                              "bg-[#FACC15]/20 text-[#111820]",
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
+                          className="w-[37px] h-[37px] rounded-full grid place-items-center shrink-0"
+                          style={{
+                            background: "#181e63",
+                            border: "1px solid #2a40ae",
+                            color: "#a080ff",
+                          }}
                         >
-                          <Icon size={16} />
+                          <Icon size={16} strokeWidth={1.8} />
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-semibold text-[#364050] group-hover:text-[#FACC15] transition-colors duration-200">
-                            {niche.name}
-                          </p>
-                          <p className="text-[11px] text-[#8b93a0]">
-                            {niche.value}
-                          </p>
+                        <div className="min-w-0">
+                          <div className="text-[12px] font-medium text-[#edf4ff] truncate">
+                            {a.title}
+                          </div>
+                          <div className="text-[10px] text-[#8096b6] mt-[5px] truncate">
+                            {a.sub}
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                <button className="mt-3.5 flex h-9 w-full items-center justify-center rounded-lg bg-[#FACC15]/20 text-[12px] font-semibold text-[#111820] hover:bg-[#FACC15]/30 transition-all duration-200">
-                  View All <ArrowUpRight size={15} className="ml-1" />
-                </button>
+              </div>
+
+              <div className="border border-[#17385f] rounded-[10px] bg-gradient-to-b from-[#06162b] to-[#041124] p-[16px]">
+                <div className="text-[13px] text-[#edf4ff]">AI Shorts Performance</div>
+                <div className="flex items-center gap-[25px] h-[125px] mt-3">
+                  <div className="relative w-[105px] h-[105px] rounded-full grid place-items-center shrink-0">
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: "conic-gradient(#7d3cff 0 28%, #2868ff 28%)",
+                      }}
+                    />
+                    <div
+                      className="absolute rounded-full"
+                      style={{ inset: 9, background: "#041124" }}
+                    />
+                    <span className="relative z-[1] text-center text-[12px] text-[#edf4ff]">
+                      <b className="block text-[22px]">48</b>
+                      Shorts
+                    </span>
+                  </div>
+                  <div className="grid gap-[9px] min-w-0">
+                    {socials.map((s, i) => (
+                      <div
+                        key={i}
+                        className="grid gap-[10px] text-[12px] text-[#edf4ff]"
+                        style={{ gridTemplateColumns: "20px 65px 25px" }}
+                      >
+                        <b className={s.color}>{s.icon}</b>
+                        <span>{s.name}</span>
+                        <span className="text-right text-[#c9d5e8]">{s.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          {/* BOTTOM CTA */}
+          <section
+            className="h-[83px] mt-[16px] border border-[#5334b4] rounded-[10px] overflow-hidden flex items-center px-[24px] gap-[17px]"
+            style={{
+              background:
+                "radial-gradient(ellipse at 65% 100%, rgba(62,57,255,.7), transparent 35%), linear-gradient(90deg, #071329, #08112b 55%, #07152d)",
+            }}
+          >
+            <div
+              className="w-[40px] h-[40px] rounded-full grid place-items-center text-[22px] shrink-0"
+              style={{ background: "#27165e", color: "#b977ff" }}
+            >
+              ✦
+            </div>
+            <div className="min-w-0">
+              <div className="text-[17px] font-semibold text-[#edf4ff]">
+                Create More. Reach Further.
+              </div>
+              <div className="text-[12px] text-[#94a3b8] mt-1">
+                Upgrade to Pro and unlock unlimited podcasts, AI shorts, premium
+                templates and more.
               </div>
             </div>
-          </div>
+            <button
+              onClick={() => navigate("/upgrades")}
+              className="ml-auto h-[40px] px-[22px] rounded-[12px] text-white text-[13px] font-medium shrink-0"
+              style={{
+                background: "linear-gradient(100deg, #7735ee, #2f78ff)",
+              }}
+            >
+              Upgrade to Pro →
+            </button>
+          </section>
         </main>
       </div>
     </div>

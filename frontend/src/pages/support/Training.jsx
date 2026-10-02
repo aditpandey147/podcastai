@@ -1,4 +1,4 @@
-// pages/Training.jsx
+// frontend/src/pages/support/Training.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
@@ -6,7 +6,6 @@ import Navbar from '../../components/Navbar';
 import videoThumbnail from '../../assets/video-thumbnail.jpg';
 import {
   Play,
-  Clock,
   BookOpen,
   Search,
   X,
@@ -16,34 +15,9 @@ import {
   Video,
   MessageCircle,
   HelpCircle,
-  Sparkles,
-  Zap,
-  Shield,
-  TrendingUp,
-  Users,
-  Award,
-  Star,
-  CheckCircle,
   ArrowRight,
-  ExternalLink,
-  Calendar,
-  BarChart3,
-  FileText,
-  Globe,
-  Lock,
-  Database,
-  Mail,
-  Phone,
-  Headphones,
-  Settings,
   Rocket,
-  Crown,
-  Gift,
-  CreditCard,
-  RefreshCw,
-  AlertCircle,
-  Info,
-  ThumbsUp,
+  Headphones,
   PlayCircle,
 } from 'lucide-react';
 
@@ -61,230 +35,259 @@ const Training = () => {
   const VIDEO_ID = 'YOUR_VIDEO_ID'; // Replace with your YouTube video ID
   const videoUrl = `https://www.youtube.com/embed/${VIDEO_ID}`;
 
-  // Enhanced FAQ Data
+  // ================================================================
+  // FAQ DATA — PodcastAI specific
+  // ================================================================
   const faqs = [
-    // Getting Started (5 FAQs)
+    // ============ Getting Started (5) ============
     {
       id: 1,
       category: 'Getting Started',
-      question: 'What is AI Digital Product Factory and how does it work?',
-      answer: 'AI Digital Product Factory is an AI-powered platform that helps you create, design, and launch digital products instantly. Simply enter your product idea, and our AI generates covers, listings, marketing materials, and more. You can create guides, workbooks, planners, checklists, prompt packs, mini-courses, challenges, worksheets, and templates.',
-      icon: '🤖'
+      question: 'What is PodcastAI and how does it work?',
+      answer:
+        'PodcastAI is an AI-powered platform that helps you create, design, and launch podcast videos instantly. Enter your topic, pick a category, choose a template, and our AI generates host & guest dialogues, AI cover art, and cinematic video — all in minutes. Perfect for YouTube Shorts, TikTok, Spotify, and all major platforms.',
+      icon: '🎙️',
     },
     {
       id: 2,
       category: 'Getting Started',
-      question: 'How do I create my first product?',
-      answer: 'To create your first product, login to your dashboard, click on "Create Product" in the sidebar, fill in the product details (title, niche, audience, problem, outcome), select your product type, and click "Generate". Our AI will create your product and you can download it as a PDF.',
-      icon: '➕'
+      question: 'How do I create my first podcast video?',
+      answer:
+        'Go to your dashboard → click "Create New Podcast" → choose a template from the library → enter your topic and details → select tone and style → click "Generate". Our AI crafts the dialogue, generates cover art, and produces your video. Download when complete.',
+      icon: '➕',
     },
     {
       id: 3,
       category: 'Getting Started',
-      question: 'How long does it take to generate a product?',
-      answer: 'A typical product generation takes 2-5 minutes depending on the product type and length. You can continue using the platform while the generation runs in the background. You will see a progress bar showing the status.',
-      icon: '⏱️'
+      question: 'How long does it take to generate a podcast video?',
+      answer:
+        'Video generation takes 1–3 minutes depending on the format and length. The AI dialogue appears in seconds; cover art streams in as it finishes. You can continue using the platform while generation runs in the background.',
+      icon: '⏱️',
     },
     {
       id: 4,
       category: 'Getting Started',
-      question: 'What product types are available?',
-      answer: 'We support multiple product types including: Guides, Workbooks, Planners, Checklists, Prompt Packs, Mini-Courses, Challenges, Worksheets, Templates, and Spreadsheets. Each type has a different structure and format optimized for its purpose.',
-      icon: '📊'
+      question: 'What podcast categories are available?',
+      answer:
+        'We support multiple categories including True Crime, Comedy & Entertainment, Business, Technology, Health & Wellness, Education, News, Sports, and more. Each category has professionally designed templates optimized for that niche.',
+      icon: '📊',
     },
     {
       id: 5,
       category: 'Getting Started',
-      question: 'Can I edit my product after generation?',
-      answer: 'Yes! You can edit your product by going to "My Products", selecting the product, and clicking "Edit". You can modify the title, description, content, and regenerate the product with updated information.',
-      icon: '🔄'
+      question: 'Can I edit my podcast after generation?',
+      answer:
+        'Yes! Go to "My Podcasts", select the video, and click "Edit". You can modify the title, dialogue, cover image, category, and regenerate with new information at any time.',
+      icon: '🔄',
     },
 
-    // Product Creation (6 FAQs)
+    // ============ Podcast Creation (6) ============
     {
       id: 6,
-      category: 'Product Creation',
-      question: 'What information do I need to create a product?',
-      answer: 'To create a product, you need: Product Title, Niche, Target Audience, Problem your product solves, Desired Outcome, Product Type, Tone (Professional, Casual, Inspiring), and Language. The more detailed your inputs, the better the AI-generated content will be.',
-      icon: '📝'
+      category: 'Podcast Creation',
+      question: 'What information do I need to create a podcast?',
+      answer:
+        'To create a podcast, you need: Topic (or let AI suggest one), Category, Host & Guest Line (or use AI Dialogue generator), Tone (Professional, Casual, Inspiring), Music, Format (16:9 or 9:16), and Language. The more detailed your inputs, the better the AI output.',
+      icon: '📝',
     },
     {
       id: 7,
-      category: 'Product Creation',
-      question: 'Can I generate a cover image for my product?',
-      answer: 'Yes! During product generation, our AI automatically creates a professional cover image for your product. You can also generate custom covers in the Cover Design section. The cover is included in your final PDF download.',
-      icon: '🎨'
+      category: 'Podcast Creation',
+      question: 'Can I generate cover art for my podcast?',
+      answer:
+        'Yes! Our AI generates professional podcast cover art automatically. Each video gets a unique AI-generated image based on your topic and mood. You can also regenerate covers from the Templates page or use the Branding Suite for a full identity kit.',
+      icon: '🎨',
     },
     {
       id: 8,
-      category: 'Product Creation',
-      question: 'How do I download my product?',
-      answer: 'Once your product is generated and marked as "Completed", go to "My Products", find your product, and click the "PDF" download button. Your product will be downloaded as a beautifully formatted PDF with cover image.',
-      icon: '📥'
+      category: 'Podcast Creation',
+      question: 'How do I download my podcast video?',
+      answer:
+        'Once your video is marked "Completed", go to "My Podcasts", find your video, and click the "Download" button. Your video downloads as MP4 with all assets bundled (video + cover art).',
+      icon: '📥',
     },
     {
       id: 9,
-      category: 'Product Creation',
-      question: 'Can I create multiple products at once?',
-      answer: 'Yes! You can create multiple products simultaneously. Each product generation runs independently, and you can track the progress of each product from your dashboard.',
-      icon: '📚'
+      category: 'Podcast Creation',
+      question: 'Can I create multiple podcasts at once?',
+      answer:
+        'Yes! You can create multiple podcast videos simultaneously. Each generation runs independently, and you can track progress for each one from your My Podcasts page.',
+      icon: '📚',
     },
     {
       id: 10,
-      category: 'Product Creation',
-      question: 'What file formats are supported for download?',
-      answer: 'Currently, products are available for download as PDF files. The PDF includes the cover page, table of contents, and all content formatted professionally. We plan to add EPUB and other formats in the future.',
-      icon: '📄'
+      category: 'Podcast Creation',
+      question: 'What video formats and durations are supported?',
+      answer:
+        'We support 16:9 (landscape) and 9:16 (portrait/vertical) formats. Standard duration is 5 seconds per video segment. Premium plans unlock longer durations up to 60 seconds. Export formats include MP4 for all major platforms.',
+      icon: '📄',
     },
     {
       id: 11,
-      category: 'Product Creation',
-      question: 'Can I add my own branding to products?',
-      answer: 'Yes! You can add your author name and brand name when creating products. These will appear on the cover page and throughout the PDF. In the future, we will offer white-label options for agencies.',
-      icon: '🏷️'
+      category: 'Podcast Creation',
+      question: 'Can I add my own branding to podcasts?',
+      answer:
+        'Yes! The Branding Suite generates a complete brand identity — name, tagline, colors, fonts, logo concept, voice, and social bios. Agency plans let you share your brand with team members.',
+      icon: '🏷️',
     },
 
-    // Cover Design (4 FAQs)
+    // ============ AI Dialogue (4) ============
     {
       id: 12,
-      category: 'Cover Design',
-      question: 'What is the Cover Design Studio?',
-      answer: 'The Cover Design Studio is a dedicated tool for creating professional book covers. You can describe your cover vision, and AI will generate stunning cover images. You can also browse and download ready-to-use cover templates.',
-      icon: '🎨'
+      category: 'AI Dialogue',
+      question: 'What is the AI Dialogue Generator?',
+      answer:
+        'The AI Dialogue Generator creates natural, punchy host-and-guest conversations for your podcast videos. Enter a topic, pick a tone and style, and AI writes the dialogue — optimized for short-form viral clips (5-10 words per line).',
+      icon: '💬',
     },
     {
       id: 13,
-      category: 'Cover Design',
-      question: 'How do I create a cover design?',
-      answer: 'Go to Cover Design in the sidebar, enter a prompt describing your cover, click "Enhance with AI" to get an optimized prompt, then click "Generate Image". The AI will create a unique cover based on your description.',
-      icon: '🖌️'
+      category: 'AI Dialogue',
+      question: 'How do I create an AI dialogue?',
+      answer:
+        'Go to "AI Dialogue" in the sidebar → enter your topic → select a category → add optional context → choose tone (Professional / Casual / Educational) and style (Conversational / Interview / Storytelling) → click "Generate Dialogue". You\'ll get 2-part host/guest sections you can save.',
+      icon: '✍️',
     },
     {
       id: 14,
-      category: 'Cover Design',
-      question: 'Can I use the generated covers for commercial use?',
-      answer: 'Yes! All covers generated by our AI are royalty-free and can be used for commercial purposes. You can use them for your products, websites, marketing materials, and more.',
-      icon: '💼'
+      category: 'AI Dialogue',
+      question: 'Can I save my dialogues for later?',
+      answer:
+        'Yes! Each Content card has its own "Save dialogue" button. Saved dialogues are stored in your browser\'s local storage and can be re-loaded anytime. Perfect for iterating on scripts.',
+      icon: '💾',
     },
     {
       id: 15,
-      category: 'Cover Design',
-      question: 'What image formats are supported?',
-      answer: 'Cover images are generated in PNG format with high resolution. You can download them directly and use them in your projects. The images are optimized for both web and print use.',
-      icon: '🖼️'
+      category: 'AI Dialogue',
+      question: 'What line lengths work best for 5-second videos?',
+      answer:
+        'Each line should be 6-10 words maximum — one punchy sentence. The AI automatically optimizes for this. Longer lines get truncated to keep your video tight and viral-friendly.',
+      icon: '⏱️',
     },
 
-    // AI Seals Machine (3 FAQs)
+    // ============ Trending & Templates (3) ============
     {
       id: 16,
-      category: 'AI Seals Machine',
-      question: 'What is the AI Seals Machine?',
-      answer: 'The AI Seals Machine generates complete product listing materials with AI. Select a product and AI creates everything: title, description, bullet points, keywords, benefits, features, target audience, SEO meta data, pricing, upsells, testimonials, and FAQ sections.',
-      icon: '🔮'
+      category: 'Trending & Templates',
+      question: 'What is the Trending Podcasts page?',
+      answer:
+        'The Trending Podcasts page lets you search any topic — AI returns the top 12 trending podcasts across YouTube, Spotify, Apple Podcasts, Amazon Music, and Google Podcasts, complete with AI-generated cover art. Perfect for inspiration or market research.',
+      icon: '🔥',
     },
     {
       id: 17,
-      category: 'AI Seals Machine',
-      question: 'What platforms are supported?',
-      answer: 'The AI Seals Machine supports multiple platforms including Amazon, eBay, Etsy, Shopify, Walmart, and General. Each platform gets tailored listing content optimized for that marketplace.',
-      icon: '🌐'
+      category: 'Trending & Templates',
+      question: 'How many templates are available?',
+      answer:
+        'We offer 50+ templates across all categories including True Crime, Comedy, Business, Health, Education, and more. New templates are added regularly. The Templates page has category filters and search to find the perfect match.',
+      icon: '📋',
     },
     {
       id: 18,
-      category: 'AI Seals Machine',
-      question: 'Can I customize the generated listings?',
-      answer: 'Yes! The generated materials are fully customizable. You can edit the content, add your own touches, and modify it to match your brand voice before publishing to your platform.',
-      icon: '✏️'
+      category: 'Trending & Templates',
+      question: 'Can I use templates commercially?',
+      answer:
+        'Yes! All templates and AI-generated assets are royalty-free and can be used for commercial purposes — YouTube monetization, client work, sponsorships, and more.',
+      icon: '💼',
     },
 
-    // DFY Templates (3 FAQs)
+    // ============ Premium Features (4) ============
     {
       id: 19,
-      category: 'DFY Templates',
-      question: 'What are DFY Templates?',
-      answer: 'DFY (Done For You) Templates are ready-to-use sales page templates. We provide 50+ professionally designed templates that you can download, customize, and launch in minutes. No design skills needed.',
-      icon: '📋'
+      category: 'Premium Features',
+      question: 'What is Podcast Creator Pro?',
+      answer:
+        'Podcast Creator Pro unlocks 30 cinematic templates, 4× faster renders, AI enhance, and instant export to all platforms. Available with Unlimited Silver, Gold, or as a standalone plan.',
+      icon: '👑',
     },
     {
       id: 20,
-      category: 'DFY Templates',
-      question: 'What\'s included in a template?',
-      answer: 'Each template includes a fully responsive HTML page, CSS stylesheet, optimized for conversions, ready-to-use sales copy, and mobile-first design. Everything you need to create a high-converting sales page.',
-      icon: '📦'
+      category: 'Premium Features',
+      question: 'What is Viral Shorts AI?',
+      answer:
+        'Viral Shorts AI analyzes your generated podcast video and platform, then generates a complete publishing kit — title, description, hashtags, tags, thumbnail text, best posting time, hook, and CTA — all optimized per platform.',
+      icon: '✨',
     },
     {
       id: 21,
-      category: 'DFY Templates',
-      question: 'Can I customize the templates?',
-      answer: 'Absolutely! All templates are fully customizable. You can edit the HTML/CSS, replace content with your own, update colors to match your brand, add product images and testimonials, and customize it to your needs.',
-      icon: '🎨'
+      category: 'Premium Features',
+      question: 'What is Podcast Growth Studio?',
+      answer:
+        'Podcast Growth Studio builds a personalized 4-week roadmap, content plan, and monetization strategy based on your video. Includes growth score, positioning analysis, distribution channels, and monetization paths.',
+      icon: '📈',
     },
-
-    // Plans & Pricing (4 FAQs)
     {
       id: 22,
-      category: 'Plans & Pricing',
-      question: 'What plans are available?',
-      answer: 'We offer multiple plans: Free (basic features, limited products), FE (unlimited access), FE+TURBO (all features), Unlimited Silver (advanced features), Unlimited Gold (premium features), and AI Profit Machine (complete suite). Each plan offers different features and capabilities.',
-      icon: '💎'
+      category: 'Premium Features',
+      question: 'What is the AI Podcast Branding Suite?',
+      answer:
+        'The Branding Suite generates a complete brand identity: name, tagline, mission, 5-color palette, typography system, logo concept, voice & tone guide, 4 platform bios, thumbnail formula, and a launch checklist — all in 30 seconds.',
+      icon: '🎨',
     },
+
+    // ============ Plans & Pricing (4) ============
     {
       id: 23,
       category: 'Plans & Pricing',
-      question: 'Can I upgrade my plan later?',
-      answer: 'Yes! You can upgrade to a higher plan at any time. The upgrade is instant and you get immediate access to all new features. Your existing products and data are preserved.',
-      icon: '⬆️'
+      question: 'What plans are available?',
+      answer:
+        'We offer: FE ($12), FE + TURBO ($27), Unlimited Silver ($47), Unlimited Gold ($69), Podcast Creator Pro ($37), Viral Shorts AI ($49), Podcast Growth Studio ($67), AI Podcast Branding Suite ($47), DFY Podcast Pack Silver ($97), DFY Podcast Pack Gold ($129), AI Ranker ($69), Agency ($197), and RESELLER ($249).',
+      icon: '💎',
     },
     {
       id: 24,
       category: 'Plans & Pricing',
-      question: 'Do you offer refunds?',
-      answer: 'Yes! We offer a 30-day money-back guarantee. If you are not satisfied with our service for any reason, we will refund your purchase within the first 30 days, no questions asked.',
-      icon: '✅'
+      question: 'Can I upgrade my plan later?',
+      answer:
+        'Yes! Upgrade to a higher plan anytime — the upgrade is instant and you get immediate access to all new features. Your existing podcasts, dialogues, and saved work are all preserved.',
+      icon: '⬆️',
     },
     {
       id: 25,
       category: 'Plans & Pricing',
-      question: 'What payment methods do you accept?',
-      answer: 'We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and bank transfers through our payment partners JVZoo and LaunchPad.',
-      icon: '💳'
+      question: 'Do you offer refunds?',
+      answer:
+        'Yes — we offer a 30-day money-back guarantee. If you\'re not satisfied for any reason, contact support within 30 days of purchase for a full refund, no questions asked.',
+      icon: '✅',
     },
-
-    // General (4 FAQs)
     {
       id: 26,
-      category: 'General',
-      question: 'How do I contact support?',
-      answer: 'You can contact our support team through the Support page in your dashboard, or use the live chat feature available on our website. Our team responds within 24 hours. For urgent issues, live chat is the fastest way to get help.',
-      icon: '📧'
+      category: 'Plans & Pricing',
+      question: 'What payment methods do you accept?',
+      answer:
+        'We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and bank transfers through our payment partners JVZoo and LaunchPad.',
+      icon: '💳',
     },
+
+    // ============ General (3) ============
     {
       id: 27,
       category: 'General',
-      question: 'Can I use AI Digital Product Factory for multiple products?',
-      answer: 'Yes! With our Unlimited plans, you can create unlimited products. The Free plan allows you to create a limited number of products. Upgrade to any paid plan for unlimited product creation.',
-      icon: '🌐'
+      question: 'How do I contact support?',
+      answer:
+        'Contact us via the Support page in your dashboard or use our live chat. Our team responds within 24-48 hours (excluding Sundays). For urgent issues, live chat is the fastest way to get help.',
+      icon: '📧',
     },
     {
       id: 28,
       category: 'General',
-      question: 'Do you offer API access?',
-      answer: 'API access is available with our premium plans. This allows you to integrate AI Digital Product Factory with your own applications, automate product creation, and retrieve generated content programmatically.',
-      icon: '🔌'
+      question: 'Can I create unlimited podcast videos?',
+      answer:
+        'With Unlimited Silver and Unlimited Gold plans, yes — unlimited podcast videos, AI shorts, and all premium features. Lower plans have reasonable monthly limits.',
+      icon: '♾️',
     },
     {
       id: 29,
       category: 'General',
       question: 'How do I change my password?',
-      answer: 'You can change your password by going to Settings → Security → Change Password. Enter your current password and your new password, then click Save. Make sure to save your new password in a safe place.',
-      icon: '🔐'
-    }
+      answer:
+        'Go to Settings → Security → Change Password. Enter your current password and your new password, then click Save. Your default password is the same as your purchase email — we recommend changing it after first login.',
+      icon: '🔐',
+    },
   ];
 
-  // Get unique categories
   const categories = ['all', ...new Set(faqs.map(faq => faq.category))];
 
-  // Filter FAQs based on search and category
   const filteredFaqs = faqs.filter(faq => {
     const matchesSearch = faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
@@ -292,85 +295,85 @@ const Training = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Group filtered FAQs by category
   const groupedFaqs = filteredFaqs.reduce((acc, faq) => {
-    if (!acc[faq.category]) {
-      acc[faq.category] = [];
-    }
+    if (!acc[faq.category]) acc[faq.category] = [];
     acc[faq.category].push(faq);
     return acc;
   }, {});
 
-  // Get category counts
   const categoryCounts = faqs.reduce((acc, faq) => {
     acc[faq.category] = (acc[faq.category] || 0) + 1;
     return acc;
   }, {});
 
-  // Scroll to top button visibility
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
+    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleFaq = (id) => {
-    setExpandedFaq(expandedFaq === id ? null : id);
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
+  const toggleFaq = (id) => setExpandedFaq(expandedFaq === id ? null : id);
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const scrollToCategory = (category) => {
     const element = document.getElementById(`faq-${category.replace(/\s+/g, '-')}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-
-  const handlePlayVideo = () => {
-    setIsVideoPlaying(true);
-  };
+  const handlePlayVideo = () => setIsVideoPlaying(true);
 
   return (
-    <div className="flex h-screen bg-[#f5f6f8]">
+    <div className="flex h-screen" style={{ background: '#020914' }}>
       <Sidebar />
       <div className="flex-1 ml-0 md:ml-[18rem] flex flex-col overflow-hidden">
         <Navbar />
-        
+
         <div className="flex-1 overflow-y-auto custom-scroll" ref={faqContainerRef}>
           <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-            
+
             {/* ===== HEADER ===== */}
             <div className="mb-6">
-              <h1 className="text-2xl md:text-3xl font-bold text-[#111111] flex items-center gap-3">
-                <BookOpen size={28} className="text-[#FACC15]" />
+              <h1 className="text-2xl md:text-3xl font-bold text-[#eaf1ff] flex items-center gap-3">
+                <BookOpen size={28} className="text-[#c9b5ff]" />
                 Training Center
               </h1>
-              <p className="text-sm text-[#6B7280] mt-1">Watch our demo video and find answers to common questions</p>
+              <p className="text-sm text-[#8fa0ba] mt-1">
+                Watch our demo video and find answers to common questions
+              </p>
             </div>
 
             {/* ===== TWO COLUMN LAYOUT ===== */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* ===== LEFT COLUMN - Main Content (2/3) ===== */}
+
+              {/* ===== LEFT COLUMN - Main Content ===== */}
               <div className="lg:col-span-2 space-y-6">
-                
-                {/* Video Section */}
-                <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden">
-                  <div className="bg-gradient-to-r from-[#FACC15] to-[#F59E0B] px-6 py-4">
+
+                {/* ===== Video Section ===== */}
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: '#06162b',
+                    border: '1px solid #17385f',
+                    boxShadow: '0 4px 20px rgba(0,0,0,.35)',
+                  }}
+                >
+                  <div
+                    className="px-6 py-4"
+                    style={{
+                      background: 'linear-gradient(100deg, #6e35ed, #3483ff)',
+                    }}
+                  >
                     <div className="flex items-center gap-2">
-                      <Video size={20} className="text-[#111820]" />
-                      <h2 className="text-lg font-bold text-[#111820]">Demo Video</h2>
+                      <Video size={20} className="text-white" />
+                      <h2 className="text-lg font-bold text-white">Demo Video</h2>
                     </div>
-                    <p className="text-[#111820]/70 text-sm">Watch this quick demo to get started</p>
+                    <p className="text-white/80 text-sm">
+                      Watch this quick demo to get started
+                    </p>
                   </div>
-                  
+
                   <div className="p-4 md:p-6">
-                    <div className="relative aspect-video bg-gray-900 rounded-xl overflow-hidden shadow-lg group">
+                    <div className="relative aspect-video rounded-xl overflow-hidden shadow-lg group"
+                      style={{ background: '#041124', border: '1px solid #17385f' }}
+                    >
                       {!isVideoPlaying ? (
                         <>
                           {!thumbnailError && (
@@ -381,17 +384,33 @@ const Training = () => {
                               onError={() => setThumbnailError(true)}
                             />
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                          
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+
                           <button
                             onClick={handlePlayVideo}
                             className="absolute inset-0 flex items-center justify-center cursor-pointer group"
                           >
                             <div className="relative">
-                              <div className="absolute inset-0 rounded-full bg-[#FACC15]/30 animate-ping"></div>
-                              <div className="relative w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-2xl border-2 border-white/30">
-                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#FACC15] flex items-center justify-center shadow-lg group-hover:bg-[#F59E0B] transition">
-                                  <Play size={28} className="text-[#111820] ml-1" />
+                              <div
+                                className="absolute inset-0 rounded-full animate-ping"
+                                style={{ background: 'rgba(110,53,237,.35)' }}
+                              ></div>
+                              <div
+                                className="relative w-20 h-20 md:w-28 md:h-28 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-2xl"
+                                style={{
+                                  background: 'rgba(255,255,255,.15)',
+                                  backdropFilter: 'blur(6px)',
+                                  border: '2px solid rgba(255,255,255,.3)',
+                                }}
+                              >
+                                <div
+                                  className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center shadow-lg transition"
+                                  style={{
+                                    background:
+                                      'linear-gradient(135deg, #6e35ed, #3483ff)',
+                                  }}
+                                >
+                                  <Play size={28} className="text-white ml-1" />
                                 </div>
                               </div>
                             </div>
@@ -399,13 +418,22 @@ const Training = () => {
 
                           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                             <p className="text-white font-semibold text-sm flex items-center gap-2">
-                              <PlayCircle size={16} className="text-[#FACC15]" />
+                              <PlayCircle size={16} className="text-[#c9b5ff]" />
                               Watch Demo Video
                             </p>
-                            <p className="text-gray-300 text-xs">Click play to watch the demo • ~5 minutes</p>
+                            <p className="text-gray-300 text-xs">
+                              Click play to watch the demo • ~5 minutes
+                            </p>
                           </div>
 
-                          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-lg text-white text-xs font-medium flex items-center gap-2 border border-white/10">
+                          <div
+                            className="absolute top-4 right-4 px-3 py-1.5 rounded-lg text-white text-xs font-medium flex items-center gap-2"
+                            style={{
+                              background: 'rgba(2,7,19,.6)',
+                              backdropFilter: 'blur(6px)',
+                              border: '1px solid rgba(255,255,255,.15)',
+                            }}
+                          >
                             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                             HD
                           </div>
@@ -424,49 +452,91 @@ const Training = () => {
                   </div>
                 </div>
 
-                {/* FAQ Section */}
-                <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden">
-                  <div className="bg-gradient-to-r from-[#FACC15] to-[#F59E0B] px-6 py-4">
+                {/* ===== FAQ Section ===== */}
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: '#06162b',
+                    border: '1px solid #17385f',
+                    boxShadow: '0 4px 20px rgba(0,0,0,.35)',
+                  }}
+                >
+                  <div
+                    className="px-6 py-4"
+                    style={{
+                      background: 'linear-gradient(100deg, #6e35ed, #3483ff)',
+                    }}
+                  >
                     <div className="flex items-center gap-2">
-                      <HelpCircle size={20} className="text-[#111820]" />
-                      <h2 className="text-lg font-bold text-[#111820]">Frequently Asked Questions</h2>
+                      <HelpCircle size={20} className="text-white" />
+                      <h2 className="text-lg font-bold text-white">
+                        Frequently Asked Questions
+                      </h2>
                     </div>
-                    <p className="text-[#111820]/70 text-sm">Find answers to common questions</p>
+                    <p className="text-white/80 text-sm">
+                      Find answers to common questions
+                    </p>
                   </div>
 
                   <div className="p-4 md:p-6">
                     {/* Search */}
                     <div className="relative mb-4">
-                      <Search size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#6B7280]" />
+                      <Search
+                        size={18}
+                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#7d8fa8]"
+                      />
                       <input
                         type="text"
                         placeholder="Search FAQs..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-10 py-3 border border-[#E5E7EB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FACC15] focus:border-transparent bg-[#F8F9FA]"
+                        className="w-full pl-12 pr-10 py-3 rounded-xl text-sm focus:outline-none transition"
+                        style={{
+                          background: '#041124',
+                          border: '1px solid #17385f',
+                          color: '#eaf1ff',
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor =
+                            'rgba(150,120,255,.6)';
+                          e.currentTarget.style.boxShadow =
+                            '0 0 0 3px rgba(110,53,237,.15)';
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = '#17385f';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
                       />
                       {searchTerm && (
                         <button
                           onClick={() => setSearchTerm('')}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#6B7280] hover:text-[#111111] transition"
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#7d8fa8] hover:text-white transition"
                         >
                           <X size={16} />
                         </button>
                       )}
                     </div>
 
-                    <p className="text-xs text-[#6B7280] mb-4">
+                    <p className="text-xs text-[#8fa0ba] mb-4">
                       Showing {filteredFaqs.length} of {faqs.length} FAQs
                     </p>
 
                     {Object.keys(groupedFaqs).length === 0 ? (
                       <div className="text-center py-12">
                         <div className="text-6xl mb-4">🔍</div>
-                        <h3 className="text-lg font-semibold text-[#111111]">No FAQs Found</h3>
-                        <p className="text-[#6B7280] text-sm">Try adjusting your search or filter</p>
+                        <h3 className="text-lg font-semibold text-[#eaf1ff]">
+                          No FAQs Found
+                        </h3>
+                        <p className="text-[#8fa0ba] text-sm">
+                          Try adjusting your search or filter
+                        </p>
                         <button
-                          onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }}
-                          className="mt-4 text-sm text-[#FACC15] hover:text-[#F59E0B] font-medium"
+                          onClick={() => {
+                            setSearchTerm('');
+                            setSelectedCategory('all');
+                          }}
+                          className="mt-4 text-sm font-medium transition"
+                          style={{ color: '#c9b5ff' }}
                         >
                           Clear filters
                         </button>
@@ -474,46 +544,73 @@ const Training = () => {
                     ) : (
                       Object.entries(groupedFaqs).map(([category, categoryFaqs]) => (
                         <div key={category} className="mb-6 last:mb-0">
-                          <h3 
+                          <h3
                             id={`faq-${category.replace(/\s+/g, '-')}`}
-                            className="text-sm font-semibold text-[#111111] bg-[#F8F9FA] px-4 py-2 rounded-lg mb-3 flex items-center gap-2"
+                            className="text-sm font-semibold text-[#eaf1ff] px-4 py-2 rounded-lg mb-3 flex items-center gap-2"
+                            style={{
+                              background: 'rgba(6,20,42,.7)',
+                              border: '1px solid #17385f',
+                            }}
                           >
-                            <FolderOpen size={16} className="text-[#FACC15]" />
+                            <FolderOpen size={16} className="text-[#c9b5ff]" />
                             {category} ({categoryFaqs.length})
                           </h3>
-                          
+
                           <div className="space-y-2">
-                            {categoryFaqs.map((faq) => (
-                              <div 
-                                key={faq.id}
-                                className={`border rounded-xl overflow-hidden transition-all duration-200 ${
-                                  expandedFaq === faq.id
-                                    ? 'border-[#FACC15] shadow-md bg-[#FACC15]/5'
-                                    : 'border-[#E5E7EB] hover:border-[#FACC15]/50'
-                                }`}
-                              >
-                                <button
-                                  onClick={() => toggleFaq(faq.id)}
-                                  className="w-full px-4 py-3 text-left flex items-start gap-3 hover:bg-[#F8F9FA]/50 transition"
+                            {categoryFaqs.map((faq) => {
+                              const isOpen = expandedFaq === faq.id;
+                              return (
+                                <div
+                                  key={faq.id}
+                                  className="rounded-xl overflow-hidden transition-all duration-200"
+                                  style={{
+                                    background: isOpen
+                                      ? 'linear-gradient(135deg, rgba(110,53,237,.12), rgba(52,131,255,.08))'
+                                      : 'rgba(6,20,42,.5)',
+                                    border: isOpen
+                                      ? '1px solid rgba(150,120,255,.5)'
+                                      : '1px solid #17385f',
+                                    boxShadow: isOpen
+                                      ? '0 8px 24px rgba(0,0,0,.35)'
+                                      : 'none',
+                                  }}
                                 >
-                                  <span className="text-xl mt-0.5">{faq.icon}</span>
-                                  <span className="text-sm font-medium text-[#111111] pr-4 flex-1">
-                                    {faq.question}
-                                  </span>
-                                  <span className={`text-[#6B7280] transition-transform duration-300 flex-shrink-0 mt-1 ${expandedFaq === faq.id ? 'rotate-180' : ''}`}>
-                                    <ChevronDown size={18} />
-                                  </span>
-                                </button>
-                                
-                                {expandedFaq === faq.id && (
-                                  <div className="px-4 pb-3 pt-0 border-t border-[#E5E7EB]">
-                                    <p className="text-sm text-[#6B7280] leading-relaxed">
-                                      {faq.answer}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
+                                  <button
+                                    onClick={() => toggleFaq(faq.id)}
+                                    className="w-full px-4 py-3 text-left flex items-start gap-3 transition"
+                                  >
+                                    <span className="text-xl mt-0.5">
+                                      {faq.icon}
+                                    </span>
+                                    <span className="text-sm font-medium text-[#eaf1ff] pr-4 flex-1">
+                                      {faq.question}
+                                    </span>
+                                    <span
+                                      className="transition-transform duration-300 flex-shrink-0 mt-1"
+                                      style={{
+                                        transform: isOpen
+                                          ? 'rotate(180deg)'
+                                          : 'rotate(0)',
+                                        color: isOpen ? '#c9b5ff' : '#7d8fa8',
+                                      }}
+                                    >
+                                      <ChevronDown size={18} />
+                                    </span>
+                                  </button>
+
+                                  {isOpen && (
+                                    <div
+                                      className="px-4 pb-3 pt-0"
+                                      style={{ borderTop: '1px solid #17385f' }}
+                                    >
+                                      <p className="text-sm text-[#aebfd5] leading-relaxed pt-3">
+                                        {faq.answer}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       ))
@@ -522,51 +619,86 @@ const Training = () => {
                 </div>
               </div>
 
-              {/* ===== RIGHT COLUMN - Sidebar (1/3) ===== */}
-              <div className="lg:col-span-1 space-y-4 overflow-hidden sticky top-4">
-                
+              {/* ===== RIGHT COLUMN - Sidebar ===== */}
+              <div className="lg:col-span-1 space-y-4 sticky top-4">
                 {/* Categories */}
-                <div className="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] overflow-hidden">
-                  <div className="bg-gradient-to-r from-[#FACC15] to-[#F59E0B] px-4 py-3">
-                    <h3 className="text-sm font-bold text-[#111820] flex items-center gap-2">
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: '#06162b',
+                    border: '1px solid #17385f',
+                    boxShadow: '0 4px 20px rgba(0,0,0,.35)',
+                  }}
+                >
+                  <div
+                    className="px-4 py-3"
+                    style={{
+                      background: 'linear-gradient(100deg, #6e35ed, #3483ff)',
+                    }}
+                  >
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
                       <FolderOpen size={16} />
                       Categories
                     </h3>
                   </div>
-                  
+
                   <div className="p-4">
                     <button
                       onClick={() => setSelectedCategory('all')}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition mb-1 ${
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition mb-1"
+                      style={
                         selectedCategory === 'all'
-                          ? 'bg-[#FACC15]/20 text-[#111820]'
-                          : 'text-[#6B7280] hover:bg-[#F8F9FA]'
-                      }`}
+                          ? {
+                              background: 'rgba(110,53,237,.2)',
+                              color: '#eaf1ff',
+                              border: '1px solid rgba(150,120,255,.4)',
+                            }
+                          : { color: '#aebfd5' }
+                      }
                     >
                       <div className="flex items-center justify-between">
                         <span>📋 All Questions</span>
-                        <span className="text-xs bg-[#F8F9FA] text-[#6B7280] px-2 py-0.5 rounded-full">
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{
+                            background: 'rgba(6,20,42,.7)',
+                            border: '1px solid #17385f',
+                            color: '#8fa0ba',
+                          }}
+                        >
                           {faqs.length}
                         </span>
                       </div>
                     </button>
 
-                    {categories.filter(c => c !== 'all').map((category) => (
+                    {categories.filter((c) => c !== 'all').map((category) => (
                       <button
                         key={category}
                         onClick={() => {
                           setSelectedCategory(category);
                           scrollToCategory(category);
                         }}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition mb-1 ${
+                        className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition mb-1"
+                        style={
                           selectedCategory === category
-                            ? 'bg-[#FACC15]/20 text-[#111820]'
-                            : 'text-[#6B7280] hover:bg-[#F8F9FA]'
-                        }`}
+                            ? {
+                                background: 'rgba(110,53,237,.2)',
+                                color: '#eaf1ff',
+                                border: '1px solid rgba(150,120,255,.4)',
+                              }
+                            : { color: '#aebfd5' }
+                        }
                       >
                         <div className="flex items-center justify-between">
                           <span>{category}</span>
-                          <span className="text-xs bg-[#F8F9FA] text-[#6B7280] px-2 py-0.5 rounded-full">
+                          <span
+                            className="text-xs px-2 py-0.5 rounded-full"
+                            style={{
+                              background: 'rgba(6,20,42,.7)',
+                              border: '1px solid #17385f',
+                              color: '#8fa0ba',
+                            }}
+                          >
                             {categoryCounts[category] || 0}
                           </span>
                         </div>
@@ -576,18 +708,31 @@ const Training = () => {
                 </div>
 
                 {/* Need Help */}
-                <div className="bg-gradient-to-br from-[#FFFBEB] to-[#FEF3C7] rounded-2xl border border-[#FACC15]/30 p-4">
+                <div
+                  className="rounded-2xl p-4"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(110,53,237,.15), rgba(52,131,255,.1))',
+                    border: '1px solid rgba(150,120,255,.4)',
+                  }}
+                >
                   <div className="flex items-center gap-2 mb-2">
-                    <Headphones size={18} className="text-[#FACC15]" />
-                    <h3 className="text-sm font-bold text-[#111820]">Need Help?</h3>
+                    <Headphones size={18} className="text-[#c9b5ff]" />
+                    <h3 className="text-sm font-bold text-[#eaf1ff]">
+                      Need Help?
+                    </h3>
                   </div>
-                  <p className="text-xs text-[#6B7280] mb-3">
+                  <p className="text-xs text-[#8fa0ba] mb-3">
                     Still have questions? Our support team is here to help.
                   </p>
                   <div className="space-y-2">
                     <a
                       href="/support"
-                      className="w-full flex items-center justify-center gap-2 bg-[#FACC15] text-[#111820] px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#F59E0B] transition"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition hover:-translate-y-0.5"
+                      style={{
+                        background: 'linear-gradient(100deg, #6e35ed, #3483ff)',
+                        boxShadow: '0 6px 18px rgba(110,53,237,.35)',
+                      }}
                     >
                       <MessageCircle size={16} />
                       Contact Support
@@ -595,7 +740,12 @@ const Training = () => {
                     </a>
                     <a
                       href="/dashboard"
-                      className="w-full flex items-center justify-center gap-2 bg-white border border-[#E5E7EB] text-[#6B7280] px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#F8F9FA] transition"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition"
+                      style={{
+                        background: 'rgba(6,20,42,.7)',
+                        border: '1px solid #17385f',
+                        color: '#aebfd5',
+                      }}
                     >
                       <Rocket size={16} />
                       Go to Dashboard
@@ -608,33 +758,32 @@ const Training = () => {
         </div>
       </div>
 
-      {/* Scroll to Top Button */}
+      {/* Scroll to Top */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 bg-[#FACC15] text-[#111820] p-3 rounded-full shadow-lg hover:bg-[#F59E0B] transition z-50"
+          className="fixed bottom-8 right-8 p-3 rounded-full transition z-50"
+          style={{
+            background: 'linear-gradient(100deg, #6e35ed, #3483ff)',
+            color: '#ffffff',
+            boxShadow: '0 8px 24px rgba(110,53,237,.45)',
+          }}
         >
           <ChevronUp size={20} />
         </button>
       )}
 
       <style>{`
-        .custom-scroll::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb {
-          background: #d1d5db;
+          background: rgba(110,53,237,.4);
           border-radius: 20px;
         }
         .custom-scroll::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
+          background: rgba(110,53,237,.7);
         }
-        .custom-scroll {
-          scroll-behavior: smooth;
-        }
+        .custom-scroll { scroll-behavior: smooth; }
         @keyframes ping {
           0% { transform: scale(0.8); opacity: 0.8; }
           100% { transform: scale(1.5); opacity: 0; }

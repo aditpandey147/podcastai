@@ -4,7 +4,8 @@ import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { AIProfitProvider } from "./context/AIProfitContext";
-import PrivateRoute from "./components/PrivateRoute";
+import PrivateRoute from "./components/features/PrivateRoute";
+import FeatureRoute from "./components/features/FeatureRoute";   // 👈 NEW
 import HomeNavbar from "./components/HomeNavbar";
 import Footer from "./components/Footer";
 
@@ -15,66 +16,71 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Subscription from "./pages/auth/Subscription";
 
-//Pages
+// Pages
 import Dashboard from "./pages/Dashboard";
-import ProductList from "./pages/ProductList";
+import Templates from "./pages/Templates";
 import CreateProduct from "./pages/CreateProduct";
-import ProductEditor from "./pages/ProductEditor";
+import MyPodcasts from "./pages/MyPodcasts";
+import AIDialogue from "./pages/AIDialogue";
+import TrendingPodcasts from "./pages/TrendingPodcasts";
 
-//Admin
+// Admin
 import AdminDashboard from "./pages/admin/Dashboard";
 
-//oto's//
+// Agency
+import Agency from "./pages/agency/Agency";
+
+// OTOs
 import Unlimited from "./pages/otos/Unlimited";
-import AIProfitMachine from "./pages/profit/AIProfitMachine";
-import AIProfitChat from "./pages/profit/AIProfitChat";
-import AIRanker from "./pages/ranker/AIRanker";
-import AIRankerChat from "./pages/ranker/AIRankerChat";
-import CoverDesign from "./pages/otos/CoverDesign";
-import AISealsMachine from "./pages/otos/AISealsMachine";
+import PodcastCreatorPro from "./pages/otos/PodcastCreatorPro";
+import ViralShortsAI from "./pages/otos/ViralShortsAI";
+import PodcastGrowthStudio from "./pages/otos/PodcastGrowthStudio";
+import BrandingSuite from "./pages/otos/BrandingSuite";
 import Reseller from "./pages/otos/Reseller";
 
-// ots's dfy
-import DfyTemplates from "./pages/otos/DfyTemplates";
-
-//Support
+// Support
 import Training from "./pages/support/Training";
 import Support from "./pages/support/Support";
 import Settings from "./pages/Settings";
 
-// ✅ Layout component
+// 👇 NEW
+import UpgradeRequired from "./pages/features/UpgradeRequired";
+
+// ================================================================
+// Layout — unchanged
+// ================================================================
 const Layout = ({ children }) => {
   const location = useLocation();
 
-  // ✅ Pages that should NOT show HomeNavbar and Footer
   const dashboardPages = [
     "/dashboard",
-    "/products",
-    "/create",
-    "/create-product", // ✅ ADD THIS
-    "/products/:productId",
+    "/templates",
+    "/create-podcast",
+    "/trending-podcasts",
+    "/my-podcasts",
+    "/ai-dialogue",
+    "/podcast-creator-pro",
     "/admin/dashboard",
-    "/ai-profit-machine",
-    "/dfy-templates",
-    "/ai-ranker",
     "/unlimited",
+    "/viral-shorts-ai",
+    "/podcast-growth-studio",
+    "/branding-suite",
     "/training",
     "/support",
-    "/cover-design",
-    "/aiseals",
     "/settings",
     "/subscription",
     "/reseller",
+    "/agency",
+    "/upgrade-required",   // 👈 NEW — dashboard-style (has Sidebar)
   ];
 
-  // ✅ Check if current path is a dashboard page
   const isDashboardPage =
     dashboardPages.includes(location.pathname) ||
     location.pathname.startsWith("/ai-profit-machine/chat/") ||
     location.pathname.startsWith("/ai-ranker/chat/") ||
-    location.pathname.startsWith("/products/");
+    location.pathname.startsWith("/products/") ||
+    location.pathname.startsWith("/templates/");
 
-  // ✅ Pages that should NOT show any navbar
   const authPages = [
     "/login",
     "/signup",
@@ -96,6 +102,9 @@ const Layout = ({ children }) => {
   );
 };
 
+// ================================================================
+// App
+// ================================================================
 function App() {
   return (
     <AuthProvider>
@@ -103,17 +112,27 @@ function App() {
         <Toaster position="top-right" />
         <Layout>
           <Routes>
-            {/* ✅ REDIRECT root (/) to /login */}
+            {/* Root redirect */}
             <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* Auth Routes */}
+            {/* ==================== Auth Routes ==================== */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/support" element={<Support />} />
 
-            {/* Protected Dashboard Routes */}
+            {/* ==================== Admin ==================== */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <PrivateRoute>
+                  <AdminDashboard />
+                </PrivateRoute>
+              }
+            />
+
+            {/* ==================== Free Routes (auth only) ==================== */}
             <Route
               path="/dashboard"
               element={
@@ -124,17 +143,25 @@ function App() {
             />
 
             <Route
-              path="/products"
+              path="/ai-dialogue"
               element={
                 <PrivateRoute>
-                  <ProductList />
+                  <AIDialogue />
                 </PrivateRoute>
               }
             />
 
-            {/* ✅ Keep both /create and /create-product */}
             <Route
-              path="/create"
+              path="/templates"
+              element={
+                <PrivateRoute>
+                  <Templates />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/create-podcast"
               element={
                 <PrivateRoute>
                   <CreateProduct />
@@ -142,96 +169,87 @@ function App() {
               }
             />
 
-            {/* ✅ ADD THIS ROUTE */}
             <Route
-              path="/create-product"
+              path="/my-podcasts"
               element={
                 <PrivateRoute>
-                  <CreateProduct />
+                  <MyPodcasts />
                 </PrivateRoute>
               }
             />
 
             <Route
-              path="/products/:productId"
+              path="/trending-podcasts"
               element={
                 <PrivateRoute>
-                  <ProductEditor />
+                  <TrendingPodcasts />
                 </PrivateRoute>
               }
             />
 
+            {/* ==================== Feature-Gated Routes ==================== */}
             <Route
               path="/unlimited"
               element={
                 <PrivateRoute>
-                  <Unlimited />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/ai-ranker"
-              element={
-                <PrivateRoute>
-                  <AIRanker />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/ai-ranker/chat/:chatId"
-              element={
-                <PrivateRoute>
-                  <AIRankerChat />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/cover-design"
-              element={
-                <PrivateRoute>
-                  <CoverDesign />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/aiseals"
-              element={
-                <PrivateRoute>
-                  <AISealsMachine />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <PrivateRoute>
-                  <AdminDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/ai-profit-machine"
-              element={
-                <PrivateRoute>
-                  <AIProfitMachine />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/ai-profit-machine/chat/:chatId"
-              element={
-                <PrivateRoute>
-                  <AIProfitChat />
+                  <FeatureRoute feature="unlimited">
+                    <Unlimited />
+                  </FeatureRoute>
                 </PrivateRoute>
               }
             />
 
-            {/* ✅ DFY Visual Library Route */}
             <Route
-              path="/dfy-templates"
+              path="/podcast-creator-pro"
               element={
                 <PrivateRoute>
-                  <DfyTemplates />
+                  <FeatureRoute feature="podcastCreatorPro">
+                    <PodcastCreatorPro />
+                  </FeatureRoute>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/viral-shorts-ai"
+              element={
+                <PrivateRoute>
+                  <FeatureRoute feature="viralShortsAI">
+                    <ViralShortsAI />
+                  </FeatureRoute>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/podcast-growth-studio"
+              element={
+                <PrivateRoute>
+                  <FeatureRoute feature="growthStudio">
+                    <PodcastGrowthStudio />
+                  </FeatureRoute>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/branding-suite"
+              element={
+                <PrivateRoute>
+                  <FeatureRoute feature="brandingSuite">
+                    <BrandingSuite />
+                  </FeatureRoute>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/agency"
+              element={
+                <PrivateRoute>
+                  <FeatureRoute feature="agency">
+                    <Agency />
+                  </FeatureRoute>
                 </PrivateRoute>
               }
             />
@@ -240,11 +258,14 @@ function App() {
               path="/reseller"
               element={
                 <PrivateRoute>
-                  <Reseller />
+                  <FeatureRoute feature="reseller">
+                    <Reseller />
+                  </FeatureRoute>
                 </PrivateRoute>
               }
             />
 
+            {/* ==================== Other Protected ==================== */}
             <Route
               path="/subscription"
               element={
@@ -262,11 +283,22 @@ function App() {
                 </PrivateRoute>
               }
             />
+
             <Route
               path="/settings"
               element={
                 <PrivateRoute>
                   <Settings />
+                </PrivateRoute>
+              }
+            />
+
+            {/* ==================== Upgrade Required Fallback ==================== */}
+            <Route
+              path="/upgrade-required"
+              element={
+                <PrivateRoute>
+                  <UpgradeRequired />
                 </PrivateRoute>
               }
             />

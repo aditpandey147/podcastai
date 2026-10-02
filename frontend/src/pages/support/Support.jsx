@@ -1,4 +1,4 @@
-// pages/Support.jsx
+// frontend/src/pages/support/Support.jsx
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
@@ -6,37 +6,33 @@ import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import {
   Search,
-  Mail,
-  MessageSquare,
   HelpCircle,
-  BookOpen,
   Key,
   Lock,
   User,
   LogIn,
   Shield,
-  Sparkles,
-  CheckCircle,
-  XCircle,
   Copy,
   ExternalLink,
   Headphones,
   Clock,
   ArrowRight,
-  Star,
-  Users,
-  FileText,
-  Globe,
-  Phone,
-  Mail as MailIcon,
-  Send,
   MessageCircle,
-  ThumbsUp,
-  Award,
-  TrendingUp,
-  Zap,
   ChevronDown,
   CreditCard,
+  FileText,
+  Globe,
+  BookOpen,
+  CheckCircle,
+  Sparkles,
+  Mic2,
+  Radio,
+  Palette,
+  TrendingUp,
+  Film,
+  Infinity as InfinityIcon,
+  Crown,
+  Building2,
 } from "lucide-react";
 
 const Support = () => {
@@ -46,7 +42,8 @@ const Support = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("credentials");
 
-  const APP_URL = "https://aidigitalproduct.albinolabs.com";
+  const APP_URL =
+    import.meta.env.VITE_APP_URL || "https://podcastai.albinolabs.com";
   const SUPPORT_DESK_URL = "https://supportalbinolabs.tawk.help/";
 
   const userCredentials = {
@@ -73,7 +70,7 @@ const Support = () => {
       id: 1,
       question: "What is my login email?",
       answer:
-        "Your login email is the email address you used to purchase AI Digital Product Factory. This is the email where you received your purchase confirmation and login credentials.",
+        "Your login email is the email address you used to purchase PodcastAI. This is the email where you received your purchase confirmation and login credentials.",
       icon: "📧",
     },
     {
@@ -87,8 +84,8 @@ const Support = () => {
       id: 3,
       question: "How do I login to my account?",
       answer:
-        "1. Go to aidigitalproduct.albinolabs.com\n2. Enter your purchase email as your login email\n3. Enter your purchase email as your password (same as login email)\n4. Click 'Login' to access your dashboard",
-      icon: "🚀",
+        "1. Go to podcastai.albinolabs.com\n2. Enter your purchase email as your login email\n3. Enter your purchase email as your password (same as login email)\n4. Click 'Login' to access your dashboard",
+      icon: "🎙️",
     },
     {
       id: 4,
@@ -113,6 +110,13 @@ const Support = () => {
     },
     {
       id: 7,
+      question: "How do I add team members to my Agency plan?",
+      answer:
+        "If you have the Agency plan, go to the Agency page in the sidebar. Click 'Add Member' and enter their name, email, and a password. They'll instantly get access to your subscription — no separate billing required.",
+      icon: "🏢",
+    },
+    {
+      id: 8,
       question: "I'm having trouble logging in. What should I do?",
       answer:
         "If you're having trouble logging in, try these steps:\n1. Make sure you're using the correct email (the one you purchased with)\n2. Your password is the same as your email (case sensitive)\n3. Clear your browser cache and cookies\n4. Try a different browser or device\n5. If still having issues, contact our support team via Support Ticket or email.",
@@ -123,6 +127,7 @@ const Support = () => {
   const tabs = [
     { id: "credentials", label: "Login Credentials", icon: Key },
     { id: "faq", label: "FAQ", icon: HelpCircle },
+    { id: "help", label: "Help Topics", icon: BookOpen },
   ];
 
   const toggleFaq = (id) => {
@@ -132,57 +137,101 @@ const Support = () => {
   const filteredFaqs = loginFaqs.filter(
     (faq) =>
       faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.toLowerCase()),
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="flex min-h-screen bg-[#f5f6f8]">
-      <Sidebar />
-      <div className="flex-1 ml-0 md:ml-[18rem] flex flex-col min-h-screen">
-        <Navbar />
+    <div className="flex min-h-screen" style={{ background: "#020914" }}>
+      <div className="flex-1 ml-0  flex flex-col min-h-screen">
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
             {/* ===== HERO ===== */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#111827] to-[#1a2332] p-8 md:p-12 mb-8 border border-gray-800/50 shadow-2xl">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-[#FACC15]/5 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#FACC15]/5 rounded-full blur-3xl"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FACC15]/3 rounded-full blur-3xl"></div>
+            <div
+              className="relative overflow-hidden rounded-3xl p-8 md:p-12 mb-8"
+              style={{
+                background:
+                  "radial-gradient(circle at 0% 0%, rgba(110,53,237,.15), transparent 40%), radial-gradient(circle at 100% 100%, rgba(52,131,255,.12), transparent 40%), linear-gradient(135deg, #06162b 0%, #041124 100%)",
+                border: "1px solid rgba(80,150,255,.25)",
+                boxShadow:
+                  "0 22px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset",
+              }}
+            >
+              <div
+                className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl"
+                style={{ background: "rgba(110,53,237,.08)" }}
+              />
+              <div
+                className="absolute bottom-0 left-0 w-96 h-96 rounded-full blur-3xl"
+                style={{ background: "rgba(52,131,255,.08)" }}
+              />
 
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="flex-1 text-center md:text-left">
-                  <div className="inline-flex items-center gap-2 bg-[#FACC15]/20 backdrop-blur-sm text-[#FACC15] px-4 py-2 rounded-full text-sm font-medium mb-6 border border-[#FACC15]/30">
-                    <span className="w-2 h-2 bg-[#FACC15] rounded-full animate-pulse"></span>
+                  {/* Badge */}
+                  <div
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"
+                    style={{
+                      background: "rgba(110,53,237,.15)",
+                      border: "1px solid rgba(150,120,255,.4)",
+                      color: "#c9b5ff",
+                    }}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full animate-pulse"
+                      style={{
+                        background: "#0ce4bd",
+                        boxShadow: "0 0 12px #0ce4bd",
+                      }}
+                    />
                     24/7 Support Available
                   </div>
-                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+
+                  <h1 className="text-4xl md:text-5xl font-bold text-[#eaf1ff] mb-4 leading-tight">
                     How can we{" "}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FACC15] to-[#F59E0B]">
+                    <span
+                      className="bg-clip-text text-transparent"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(90deg, #b65bff, #7855ff, #338dff)",
+                        WebkitBackgroundClip: "text",
+                      }}
+                    >
                       support
                     </span>{" "}
                     you?
                   </h1>
-                  <p className="text-lg text-gray-400 max-w-2xl">
+
+                  <p className="text-lg text-[#aebfd5] max-w-2xl">
                     Get instant answers, find solutions, and connect with our
                     support team.
                   </p>
 
+                  {/* Search */}
                   <div className="max-w-xl mt-6">
-                    <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
+                    <div
+                      className="relative rounded-2xl"
+                      style={{
+                        background: "rgba(6,34,74,.55)",
+                        border: "1px solid #17385f",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                      }}
+                    >
                       <div className="flex items-center px-5">
-                        <Search size={20} className="text-gray-500" />
+                        <Search size={20} className="text-[#7d8fa8]" />
                         <input
                           type="text"
                           placeholder="Search for help..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full px-4 py-3 text-white bg-transparent border-0 focus:outline-none focus:ring-0 placeholder-gray-500 text-sm"
+                          className="w-full px-4 py-3 text-[#eaf1ff] bg-transparent border-0 focus:outline-none focus:ring-0 placeholder-[#7d8fa8] text-sm"
                         />
                         {searchQuery && (
                           <button
                             onClick={() => setSearchQuery("")}
-                            className="text-gray-500 hover:text-white transition"
+                            className="text-[#7d8fa8] hover:text-white transition"
                           >
-                            <XCircle size={18} />
+                            ×
                           </button>
                         )}
                       </div>
@@ -190,33 +239,51 @@ const Support = () => {
                   </div>
                 </div>
 
-                {/* Quick Stats */}
+                {/* Stats */}
                 <div className="flex flex-wrap justify-center md:justify-end gap-4">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 text-center min-w-[100px]">
-                    <div className="text-3xl font-bold text-[#FACC15]">24/7</div>
-                    <div className="text-xs text-gray-400">Support Available</div>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 text-center min-w-[100px]">
-                    <div className="text-3xl font-bold text-[#FACC15]">100%</div>
-                    <div className="text-xs text-gray-400">Satisfaction Rate</div>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 text-center min-w-[100px]">
-                    <div className="text-3xl font-bold text-[#FACC15]">5★</div>
-                    <div className="text-xs text-gray-400">User Rating</div>
-                  </div>
+                  {[
+                    { value: "24/7", label: "Support Available" },
+                    { value: "100%", label: "Satisfaction Rate" },
+                    { value: "5★", label: "User Rating" },
+                  ].map((s, i) => (
+                    <div
+                      key={i}
+                      className="rounded-2xl p-4 text-center min-w-[110px]"
+                      style={{
+                        background: "rgba(6,34,74,.55)",
+                        border: "1px solid rgba(150,120,255,.3)",
+                        backdropFilter: "blur(10px)",
+                        WebkitBackdropFilter: "blur(10px)",
+                      }}
+                    >
+                      <div className="text-3xl font-bold text-[#c9b5ff]">
+                        {s.value}
+                      </div>
+                      <div className="text-xs text-[#8fa0ba] mt-1">
+                        {s.label}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
             {/* ===== TWO COLUMN LAYOUT ===== */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* ===== LEFT COLUMN - Tabs (1/3) ===== */}
+              {/* ===== LEFT COLUMN - Tabs ===== */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm sticky top-4">
-                  <h3 className="text-sm font-semibold text-[#6B7280] uppercase tracking-wider mb-4 px-2">
+                <div
+                  className="rounded-2xl p-4 sticky top-4"
+                  style={{
+                    background: "#06162b",
+                    border: "1px solid #17385f",
+                    boxShadow: "0 4px 20px rgba(0,0,0,.35)",
+                  }}
+                >
+                  <h3 className="text-sm font-semibold text-[#8fa0ba] uppercase tracking-wider mb-4 px-2">
                     Support Topics
                   </h3>
+
                   <div className="space-y-1">
                     {tabs.map((tab) => {
                       const Icon = tab.icon;
@@ -225,29 +292,58 @@ const Support = () => {
                         <button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200"
+                          style={
                             isActive
-                              ? "bg-[#FACC15] text-[#111820] shadow-lg shadow-[#FACC15]/25"
-                              : "text-[#6B7280] hover:bg-[#F8F8F6] hover:text-[#111111]"
-                          }`}
+                              ? {
+                                  background:
+                                    "linear-gradient(100deg, #6e35ed, #3483ff)",
+                                  color: "#ffffff",
+                                  boxShadow:
+                                    "0 8px 24px rgba(110,53,237,.35)",
+                                }
+                              : {
+                                  color: "#aebfd5",
+                                }
+                          }
+                          onMouseEnter={(e) => {
+                            if (!isActive) {
+                              e.currentTarget.style.background =
+                                "rgba(80,150,255,.08)";
+                              e.currentTarget.style.color = "#eaf1ff";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isActive) {
+                              e.currentTarget.style.background = "transparent";
+                              e.currentTarget.style.color = "#aebfd5";
+                            }
+                          }}
                         >
                           <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                              isActive
-                                ? "bg-[#111820]/10"
-                                : "bg-[#F8F8F6]"
-                            }`}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                            style={{
+                              background: isActive
+                                ? "rgba(255,255,255,.15)"
+                                : "rgba(6,20,42,.7)",
+                              border: isActive
+                                ? "1px solid rgba(255,255,255,.2)"
+                                : "1px solid rgba(80,150,255,.25)",
+                            }}
                           >
                             <Icon
-                              size={18}
-                              className={
-                                isActive ? "text-[#111820]" : "text-[#6B7280]"
-                              }
+                              size={16}
+                              style={{
+                                color: isActive ? "#ffffff" : "#c9b5ff",
+                              }}
                             />
                           </div>
                           <span className="flex-1 text-left">{tab.label}</span>
                           {isActive && (
-                            <div className="w-1.5 h-6 bg-[#111820] rounded-full" />
+                            <div
+                              className="w-1.5 h-6 rounded-full"
+                              style={{ background: "rgba(255,255,255,.6)" }}
+                            />
                           )}
                         </button>
                       );
@@ -255,34 +351,52 @@ const Support = () => {
                   </div>
 
                   {/* Quick Contact */}
-                  <div className="mt-6 pt-6 border-t border-[#E5E7EB]">
-                    <h4 className="text-xs font-medium text-[#6B7280] uppercase tracking-wider mb-3">
+                  <div
+                    className="mt-6 pt-6"
+                    style={{ borderTop: "1px solid #17385f" }}
+                  >
+                    <h4 className="text-xs font-medium text-[#8fa0ba] uppercase tracking-wider mb-3">
                       Quick Contact
                     </h4>
-                    <div className="space-y-2">
-                      <a
-                        href={SUPPORT_DESK_URL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-2.5 bg-[#FACC15]/10 text-[#111820] rounded-xl text-sm font-medium hover:bg-[#FACC15]/20 transition"
-                      >
-                        <MessageCircle size={18} className="text-[#FACC15]" />
-                        Support
-                        <ExternalLink size={14} className="ml-auto text-[#6B7280]" />
-                      </a>
-                    </div>
+                    <a
+                      href={SUPPORT_DESK_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition"
+                      style={{
+                        background: "rgba(110,53,237,.15)",
+                        color: "#c9b5ff",
+                        border: "1px solid rgba(150,120,255,.35)",
+                      }}
+                    >
+                      <MessageCircle size={18} />
+                      Support
+                      <ExternalLink
+                        size={14}
+                        className="ml-auto text-[#7d8fa8]"
+                      />
+                    </a>
                   </div>
 
                   {/* Support Hours */}
-                  <div className="mt-4 p-4 bg-gradient-to-br from-[#FFFBEB] to-[#FEF3C7] rounded-xl border border-[#FACC15]/30">
+                  <div
+                    className="mt-4 p-4 rounded-xl"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, rgba(110,53,237,.15), rgba(52,131,255,.1))",
+                      border: "1px solid rgba(150,120,255,.35)",
+                    }}
+                  >
                     <div className="flex items-center gap-2 mb-2">
-                      <Clock size={16} className="text-[#FACC15]" />
-                      <span className="text-sm font-semibold text-[#111820]">Support Hours</span>
+                      <Clock size={16} className="text-[#c9b5ff]" />
+                      <span className="text-sm font-semibold text-[#eaf1ff]">
+                        Support Hours
+                      </span>
                     </div>
-                    <div className="space-y-1 text-xs text-[#6B7280]">
+                    <div className="space-y-1 text-xs text-[#8fa0ba]">
                       <p>Mon-Fri: 9:00 AM - 9:00 PM EST</p>
                       <p>Sat-Sun: 10:00 AM - 6:00 PM EST</p>
-                      <p className="text-[#FACC15] font-medium mt-1">
+                      <p className="text-[#0ce4bd] font-medium mt-1">
                         ⚡ Average response: &lt; 2 hours
                       </p>
                     </div>
@@ -290,23 +404,38 @@ const Support = () => {
                 </div>
               </div>
 
-              {/* ===== RIGHT COLUMN - Content (2/3) ===== */}
+              {/* ===== RIGHT COLUMN - Content ===== */}
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden shadow-sm">
-                  
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: "#06162b",
+                    border: "1px solid #17385f",
+                    boxShadow: "0 4px 20px rgba(0,0,0,.35)",
+                  }}
+                >
                   {/* ===== CREDENTIALS TAB ===== */}
                   {activeTab === "credentials" && (
                     <div>
-                      <div className="bg-gradient-to-r from-[#FACC15] to-[#F59E0B] px-6 py-5">
+                      <div
+                        className="px-6 py-5"
+                        style={{
+                          background:
+                            "linear-gradient(100deg, #6e35ed, #3483ff)",
+                        }}
+                      >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                            <Key size={20} className="text-[#111820]" />
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ background: "rgba(255,255,255,.2)" }}
+                          >
+                            <Key size={20} className="text-white" />
                           </div>
                           <div>
-                            <h2 className="text-xl font-bold text-[#111820]">
+                            <h2 className="text-xl font-bold text-white">
                               Login Credentials
                             </h2>
-                            <p className="text-[#111820]/70 text-sm">
+                            <p className="text-white/80 text-sm">
                               Use these credentials to login to your account
                             </p>
                           </div>
@@ -316,17 +445,23 @@ const Support = () => {
                       <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           {/* Email */}
-                          <div className="bg-[#F8F9FA] rounded-xl p-5 border border-[#E5E7EB] hover:shadow-md transition">
+                          <div
+                            className="rounded-xl p-5 transition"
+                            style={{
+                              background: "rgba(6,20,42,.6)",
+                              border: "1px solid #17385f",
+                            }}
+                          >
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-xs text-[#6B7280] font-medium uppercase tracking-wider flex items-center gap-2">
-                                  <User size={14} className="text-[#6B7280]" />
+                                <p className="text-xs text-[#8fa0ba] font-medium uppercase tracking-wider flex items-center gap-2">
+                                  <User size={14} className="text-[#8fa0ba]" />
                                   Login Email
                                 </p>
-                                <p className="text-base font-bold text-[#111111] mt-2 font-mono break-all">
+                                <p className="text-base font-bold text-[#eaf1ff] mt-2 font-mono break-all">
                                   {userCredentials.loginEmail}
                                 </p>
-                                <p className="text-xs text-[#6B7280] mt-1">
+                                <p className="text-xs text-[#7d8fa8] mt-1">
                                   Your purchase email is your login email
                                 </p>
                               </div>
@@ -337,7 +472,20 @@ const Support = () => {
                                     "Login Email"
                                   )
                                 }
-                                className="p-2.5 text-[#6B7280] hover:text-[#FACC15] hover:bg-[#FACC15]/10 rounded-xl transition"
+                                className="p-2.5 rounded-xl transition"
+                                style={{
+                                  color: "#7d8fa8",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color = "#c9b5ff";
+                                  e.currentTarget.style.background =
+                                    "rgba(110,53,237,.15)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color = "#7d8fa8";
+                                  e.currentTarget.style.background =
+                                    "transparent";
+                                }}
                               >
                                 <Copy size={18} />
                               </button>
@@ -345,17 +493,24 @@ const Support = () => {
                           </div>
 
                           {/* Password */}
-                          <div className="bg-[#FACC15]/5 rounded-xl p-5 border border-[#FACC15]/20 hover:shadow-md transition">
+                          <div
+                            className="rounded-xl p-5 transition"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(110,53,237,.12), rgba(52,131,255,.08))",
+                              border: "1px solid rgba(150,120,255,.35)",
+                            }}
+                          >
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-xs text-[#6B7280] font-medium uppercase tracking-wider flex items-center gap-2">
-                                  <Lock size={14} className="text-[#6B7280]" />
+                                <p className="text-xs text-[#8fa0ba] font-medium uppercase tracking-wider flex items-center gap-2">
+                                  <Lock size={14} className="text-[#8fa0ba]" />
                                   Default Password
                                 </p>
-                                <p className="text-base font-bold text-[#111111] mt-2 font-mono break-all">
+                                <p className="text-base font-bold text-[#eaf1ff] mt-2 font-mono break-all">
                                   {userCredentials.defaultPassword}
                                 </p>
-                                <p className="text-xs text-[#6B7280] mt-1">
+                                <p className="text-xs text-[#c9b5ff] mt-1">
                                   ⚠️ Your purchase email is your default password
                                 </p>
                               </div>
@@ -366,7 +521,18 @@ const Support = () => {
                                     "Default Password"
                                   )
                                 }
-                                className="p-2.5 text-[#6B7280] hover:text-[#FACC15] hover:bg-[#FACC15]/10 rounded-xl transition"
+                                className="p-2.5 rounded-xl transition"
+                                style={{ color: "#7d8fa8" }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color = "#c9b5ff";
+                                  e.currentTarget.style.background =
+                                    "rgba(110,53,237,.15)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color = "#7d8fa8";
+                                  e.currentTarget.style.background =
+                                    "transparent";
+                                }}
                               >
                                 <Copy size={18} />
                               </button>
@@ -376,19 +542,31 @@ const Support = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* How to Login */}
-                          <div className="bg-[#F8F9FA] rounded-xl p-5 border border-[#E5E7EB]">
+                          <div
+                            className="rounded-xl p-5"
+                            style={{
+                              background: "rgba(6,20,42,.5)",
+                              border: "1px solid #17385f",
+                            }}
+                          >
                             <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-[#FACC15]/20 flex items-center justify-center flex-shrink-0">
-                                <LogIn size={16} className="text-[#FACC15]" />
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                style={{
+                                  background: "rgba(110,53,237,.2)",
+                                  border: "1px solid rgba(150,120,255,.4)",
+                                }}
+                              >
+                                <LogIn size={16} className="text-[#c9b5ff]" />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-[#111111]">
+                                <p className="text-sm font-semibold text-[#eaf1ff]">
                                   How to Login
                                 </p>
-                                <ol className="text-sm text-[#6B7280] mt-2 space-y-1.5 list-decimal list-inside">
+                                <ol className="text-sm text-[#aebfd5] mt-2 space-y-1.5 list-decimal list-inside">
                                   <li>
                                     Go to{" "}
-                                    <strong className="text-[#111111]">
+                                    <strong className="text-[#c9b5ff]">
                                       {userCredentials.appUrl}
                                     </strong>
                                   </li>
@@ -408,19 +586,32 @@ const Support = () => {
                           </div>
 
                           {/* Security Tip */}
-                          <div className="bg-[#FACC15]/5 rounded-xl p-5 border border-[#FACC15]/20">
+                          <div
+                            className="rounded-xl p-5"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(110,53,237,.12), rgba(52,131,255,.08))",
+                              border: "1px solid rgba(150,120,255,.35)",
+                            }}
+                          >
                             <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-[#FACC15]/20 flex items-center justify-center flex-shrink-0">
-                                <Shield size={16} className="text-[#FACC15]" />
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                style={{
+                                  background: "rgba(110,53,237,.25)",
+                                  border: "1px solid rgba(150,120,255,.4)",
+                                }}
+                              >
+                                <Shield size={16} className="text-[#c9b5ff]" />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-[#111111]">
+                                <p className="text-sm font-semibold text-[#eaf1ff]">
                                   Security Tip
                                 </p>
-                                <p className="text-sm text-[#6B7280] mt-2 leading-relaxed">
+                                <p className="text-sm text-[#aebfd5] mt-2 leading-relaxed">
                                   For better security, we recommend changing your
                                   password after first login. Go to{" "}
-                                  <strong className="text-[#111111]">
+                                  <strong className="text-[#c9b5ff]">
                                     Settings → Security → Change Password
                                   </strong>
                                   .
@@ -436,16 +627,25 @@ const Support = () => {
                   {/* ===== FAQ TAB ===== */}
                   {activeTab === "faq" && (
                     <div>
-                      <div className="bg-gradient-to-r from-[#FACC15] to-[#F59E0B] px-6 py-5">
+                      <div
+                        className="px-6 py-5"
+                        style={{
+                          background:
+                            "linear-gradient(100deg, #6e35ed, #3483ff)",
+                        }}
+                      >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                            <HelpCircle size={20} className="text-[#111820]" />
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ background: "rgba(255,255,255,.2)" }}
+                          >
+                            <HelpCircle size={20} className="text-white" />
                           </div>
                           <div>
-                            <h2 className="text-xl font-bold text-[#111820]">
+                            <h2 className="text-xl font-bold text-white">
                               Frequently Asked Questions
                             </h2>
-                            <p className="text-[#111820]/70 text-sm">
+                            <p className="text-white/80 text-sm">
                               Common questions about logging into your account
                             </p>
                           </div>
@@ -455,55 +655,77 @@ const Support = () => {
                       <div className="p-6">
                         {filteredFaqs.length > 0 ? (
                           <div className="space-y-3">
-                            {filteredFaqs.map((faq) => (
-                              <div
-                                key={faq.id}
-                                className={`border rounded-xl overflow-hidden transition-all duration-200 ${
-                                  expandedFaq === faq.id
-                                    ? "border-[#FACC15] shadow-md bg-[#FACC15]/5"
-                                    : "border-[#E5E7EB] hover:border-[#FACC15]/50"
-                                }`}
-                              >
-                                <button
-                                  onClick={() => toggleFaq(faq.id)}
-                                  className="w-full px-5 py-4 text-left flex items-start gap-3 hover:bg-[#F8F8F6]/50 transition"
+                            {filteredFaqs.map((faq) => {
+                              const isOpen = expandedFaq === faq.id;
+                              return (
+                                <div
+                                  key={faq.id}
+                                  className="rounded-xl overflow-hidden transition-all duration-200"
+                                  style={{
+                                    background: isOpen
+                                      ? "linear-gradient(135deg, rgba(110,53,237,.12), rgba(52,131,255,.08))"
+                                      : "rgba(6,20,42,.5)",
+                                    border: isOpen
+                                      ? "1px solid rgba(150,120,255,.5)"
+                                      : "1px solid #17385f",
+                                    boxShadow: isOpen
+                                      ? "0 8px 24px rgba(0,0,0,.35)"
+                                      : "none",
+                                  }}
                                 >
-                                  <span className="text-2xl mt-0.5 flex-shrink-0">
-                                    {faq.icon}
-                                  </span>
-                                  <span className="text-sm font-medium text-[#111111] pr-4 flex-1">
-                                    {faq.question}
-                                  </span>
-                                  <span
-                                    className={`text-[#6B7280] transition-transform duration-300 flex-shrink-0 mt-1 ${
-                                      expandedFaq === faq.id
-                                        ? "rotate-180 text-[#FACC15]"
-                                        : ""
-                                    }`}
+                                  <button
+                                    onClick={() => toggleFaq(faq.id)}
+                                    className="w-full px-5 py-4 text-left flex items-start gap-3 transition"
                                   >
-                                    <ChevronDown size={18} />
-                                  </span>
-                                </button>
+                                    <span className="text-2xl mt-0.5 shrink-0">
+                                      {faq.icon}
+                                    </span>
+                                    <span className="text-sm font-medium text-[#eaf1ff] pr-4 flex-1">
+                                      {faq.question}
+                                    </span>
+                                    <span
+                                      className="transition-transform duration-300 shrink-0 mt-1"
+                                      style={{
+                                        transform: isOpen
+                                          ? "rotate(180deg)"
+                                          : "rotate(0)",
+                                        color: isOpen ? "#c9b5ff" : "#7d8fa8",
+                                      }}
+                                    >
+                                      <ChevronDown size={18} />
+                                    </span>
+                                  </button>
 
-                                {expandedFaq === faq.id && (
-                                  <div className="px-5 pb-4 pt-0 border-t border-[#E5E7EB]">
-                                    <p className="text-sm text-[#6B7280] leading-relaxed whitespace-pre-line">
-                                      {faq.answer}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
+                                  {isOpen && (
+                                    <div
+                                      className="px-5 pb-4 pt-0"
+                                      style={{
+                                        borderTop: "1px solid #17385f",
+                                      }}
+                                    >
+                                      <p className="text-sm text-[#aebfd5] leading-relaxed whitespace-pre-line pt-4">
+                                        {faq.answer}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <div className="text-center py-12">
                             <div className="text-5xl mb-4">🔍</div>
-                            <p className="text-[#6B7280]">
-                              No results found for "<strong>{searchQuery}</strong>"
+                            <p className="text-[#8fa0ba]">
+                              No results found for "
+                              <strong className="text-[#c9b5ff]">
+                                {searchQuery}
+                              </strong>
+                              "
                             </p>
                             <button
                               onClick={() => setSearchQuery("")}
-                              className="mt-3 text-sm text-[#FACC15] hover:text-[#F59E0B] font-medium"
+                              className="mt-3 text-sm font-medium transition"
+                              style={{ color: "#c9b5ff" }}
                             >
                               Clear search
                             </button>
@@ -516,16 +738,25 @@ const Support = () => {
                   {/* ===== HELP TOPICS TAB ===== */}
                   {activeTab === "help" && (
                     <div>
-                      <div className="bg-gradient-to-r from-[#FACC15] to-[#F59E0B] px-6 py-5">
+                      <div
+                        className="px-6 py-5"
+                        style={{
+                          background:
+                            "linear-gradient(100deg, #6e35ed, #3483ff)",
+                        }}
+                      >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                            <BookOpen size={20} className="text-[#111820]" />
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ background: "rgba(255,255,255,.2)" }}
+                          >
+                            <BookOpen size={20} className="text-white" />
                           </div>
                           <div>
-                            <h2 className="text-xl font-bold text-[#111820]">
+                            <h2 className="text-xl font-bold text-white">
                               Help Topics
                             </h2>
-                            <p className="text-[#111820]/70 text-sm">
+                            <p className="text-white/80 text-sm">
                               Browse through our help articles and guides
                             </p>
                           </div>
@@ -534,89 +765,89 @@ const Support = () => {
 
                       <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="p-4 bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] hover:shadow-md transition group cursor-pointer">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-[#FACC15]/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
-                                <User size={18} className="text-[#FACC15]" />
+                          {[
+                            {
+                              icon: Mic2,
+                              title: "Podcast Creation",
+                              desc: "Create stunning AI-powered podcast videos",
+                            },
+                            {
+                              icon: Sparkles,
+                              title: "AI Dialogue",
+                              desc: "Generate natural host & guest dialogues",
+                            },
+                            {
+                              icon: Palette,
+                              title: "Branding Suite",
+                              desc: "Build a complete brand identity with AI",
+                            },
+                            {
+                              icon: TrendingUp,
+                              title: "Growth Studio",
+                              desc: "Grow your podcast with AI insights",
+                            },
+                            {
+                              icon: Film,
+                              title: "Viral Shorts AI",
+                              desc: "Turn episodes into viral short clips",
+                            },
+                            {
+                              icon: Building2,
+                              title: "Agency Management",
+                              desc: "Add team members and share your plan",
+                            },
+                          ].map((topic, i) => {
+                            const Icon = topic.icon;
+                            return (
+                              <div
+                                key={i}
+                                className="p-4 rounded-xl transition cursor-pointer"
+                                style={{
+                                  background: "rgba(6,20,42,.5)",
+                                  border: "1px solid #17385f",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background =
+                                    "linear-gradient(135deg, rgba(110,53,237,.12), rgba(52,131,255,.08))";
+                                  e.currentTarget.style.borderColor =
+                                    "rgba(150,120,255,.5)";
+                                  e.currentTarget.style.transform =
+                                    "translateY(-2px)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background =
+                                    "rgba(6,20,42,.5)";
+                                  e.currentTarget.style.borderColor = "#17385f";
+                                  e.currentTarget.style.transform =
+                                    "translateY(0)";
+                                }}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div
+                                    className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                                    style={{
+                                      background: "rgba(110,53,237,.2)",
+                                      border:
+                                        "1px solid rgba(150,120,255,.4)",
+                                    }}
+                                  >
+                                    <Icon
+                                      size={18}
+                                      className="text-[#c9b5ff]"
+                                    />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-[#eaf1ff]">
+                                      {topic.title}
+                                    </h4>
+                                    <p className="text-xs text-[#8fa0ba] mt-1">
+                                      {topic.desc}
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
-                              <div>
-                                <h4 className="text-sm font-semibold text-[#111111]">Account Management</h4>
-                                <p className="text-xs text-[#6B7280] mt-1">
-                                  Manage your account settings and preferences
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] hover:shadow-md transition group cursor-pointer">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-[#FACC15]/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
-                                <Shield size={18} className="text-[#FACC15]" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-semibold text-[#111111]">Security & Privacy</h4>
-                                <p className="text-xs text-[#6B7280] mt-1">
-                                  Learn about security features and data privacy
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] hover:shadow-md transition group cursor-pointer">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-[#FACC15]/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
-                                <CreditCard size={18} className="text-[#FACC15]" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-semibold text-[#111111]">Billing & Subscriptions</h4>
-                                <p className="text-xs text-[#6B7280] mt-1">
-                                  Manage your billing and subscription plans
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] hover:shadow-md transition group cursor-pointer">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-[#FACC15]/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
-                                <FileText size={18} className="text-[#FACC15]" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-semibold text-[#111111]">Product Features</h4>
-                                <p className="text-xs text-[#6B7280] mt-1">
-                                  Learn about all the features and how to use them
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] hover:shadow-md transition group cursor-pointer">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-[#FACC15]/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
-                                <Globe size={18} className="text-[#FACC15]" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-semibold text-[#111111]">Integrations</h4>
-                                <p className="text-xs text-[#6B7280] mt-1">
-                                  Connect with your favorite tools and platforms
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="p-4 bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] hover:shadow-md transition group cursor-pointer">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-[#FACC15]/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition">
-                                <Headphones size={18} className="text-[#FACC15]" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-semibold text-[#111111]">Getting Started</h4>
-                                <p className="text-xs text-[#6B7280] mt-1">
-                                  Quick start guides and tutorials for new users
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -624,18 +855,39 @@ const Support = () => {
                 </div>
 
                 {/* ===== CTA ===== */}
-                <div className="mt-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#111827] to-[#1a2332] p-8 text-center border border-gray-800/50 shadow-xl">
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-[#FACC15]/5 rounded-full blur-2xl"></div>
-                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#FACC15]/5 rounded-full blur-2xl"></div>
+                <div
+                  className="mt-6 relative overflow-hidden rounded-2xl p-8 text-center"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 50% 0%, rgba(110,53,237,.15), transparent 60%), linear-gradient(135deg, #06162b 0%, #041124 100%)",
+                    border: "1px solid rgba(150,120,255,.4)",
+                    boxShadow:
+                      "0 22px 70px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.03) inset",
+                  }}
+                >
+                  <div
+                    className="absolute top-0 right-0 w-48 h-48 rounded-full blur-2xl"
+                    style={{ background: "rgba(110,53,237,.15)" }}
+                  />
+                  <div
+                    className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-2xl"
+                    style={{ background: "rgba(52,131,255,.15)" }}
+                  />
 
                   <div className="relative z-10">
-                    <div className="w-16 h-16 mx-auto bg-[#FACC15]/10 rounded-2xl flex items-center justify-center mb-4">
-                      <MessageCircle size={28} className="text-[#FACC15]" />
+                    <div
+                      className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4"
+                      style={{
+                        background: "rgba(110,53,237,.2)",
+                        border: "1px solid rgba(150,120,255,.5)",
+                      }}
+                    >
+                      <MessageCircle size={28} className="text-[#c9b5ff]" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-3">
+                    <h3 className="text-2xl font-bold text-[#eaf1ff] mb-3">
                       Still Need Help?
                     </h3>
-                    <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                    <p className="text-[#8fa0ba] mb-6 max-w-md mx-auto">
                       Our support team is ready to assist you with any questions.
                     </p>
                     <div className="flex flex-wrap gap-4 justify-center">
@@ -643,10 +895,15 @@ const Support = () => {
                         href={SUPPORT_DESK_URL}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-[#FACC15] text-[#111820] px-6 py-3 rounded-xl font-bold hover:bg-[#F59E0B] transition shadow-lg hover:shadow-xl"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all hover:-translate-y-0.5"
+                        style={{
+                          background:
+                            "linear-gradient(100deg, #6e35ed, #3483ff)",
+                          boxShadow: "0 8px 24px rgba(110,53,237,.4)",
+                        }}
                       >
                         <MessageCircle size={18} />
-                        Support
+                        Contact Support
                         <ArrowRight size={16} />
                       </a>
                     </div>
