@@ -13,7 +13,7 @@ const VideoLibraryPage = () => {
         <div className="flex-1 overflow-y-auto">
           <VideoLibrary 
             apiKey={import.meta.env.VITE_PEXELS_API_KEY || 'YOUR_PEXELS_API_KEY'}
-            defaultQuery="Nature"
+            defaultQuery="podcast"
             perPage={12}
           />
         </div>
