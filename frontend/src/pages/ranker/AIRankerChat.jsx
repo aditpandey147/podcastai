@@ -19,7 +19,6 @@ import {
 // ================================================================
 // DELETE CONFIRMATION MODAL
 // ================================================================
-
 const DeleteConfirmModal = ({
   isOpen,
   onClose,
@@ -32,32 +31,65 @@ const DeleteConfirmModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0"
+        style={{ background: "rgba(2,7,19,.75)", backdropFilter: "blur(6px)" }}
         onClick={onClose}
       ></div>
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-in zoom-in-95 duration-200">
-        <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertTriangle size={28} className="text-red-600" />
+      <div
+        className="relative rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6"
+        style={{
+          background: "linear-gradient(180deg, #06162b, #041124)",
+          border: "1px solid #17385f",
+        }}
+      >
+        <div
+          className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+          style={{
+            background: "rgba(255,95,126,.15)",
+            border: "1px solid rgba(255,95,126,.35)",
+          }}
+        >
+          <AlertTriangle size={28} style={{ color: "#ff8fa8" }} />
         </div>
-        <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
+        <h3
+          className="text-xl font-bold text-center mb-2"
+          style={{ color: "#eaf1ff" }}
+        >
           Delete Chat?
         </h3>
-        <p className="text-sm text-center text-gray-500 mb-6">
+        <p
+          className="text-sm text-center mb-6"
+          style={{ color: "#8fa0ba" }}
+        >
           Are you sure you want to delete "
-          <strong className="text-gray-700">{chatName || "this chat"}</strong>"?
-          This action cannot be undone and all messages will be permanently
+          <strong style={{ color: "#c9b5ff" }}>
+            {chatName || "this chat"}
+          </strong>
+          "? This action cannot be undone and all messages will be permanently
           lost.
         </p>
-        <div className="bg-gray-50 rounded-xl p-3 mb-6 border border-gray-200">
+        <div
+          className="rounded-xl p-3 mb-6"
+          style={{
+            background: "rgba(6,20,42,.7)",
+            border: "1px solid #17385f",
+          }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-              <MessageSquare size={14} className="text-emerald-600" />
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{
+                background: "rgba(110,53,237,.2)",
+                border: "1px solid rgba(150,120,255,.4)",
+              }}
+            >
+              <MessageSquare size={14} style={{ color: "#c9b5ff" }} />
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-700">
+              <p className="text-xs font-medium" style={{ color: "#eaf1ff" }}>
                 {chatName || "Chat"}
               </p>
-              <p className="text-[10px] text-gray-400">
+              <p className="text-[10px]" style={{ color: "#7d8fa8" }}>
                 This will be permanently deleted
               </p>
             </div>
@@ -66,14 +98,22 @@ const DeleteConfirmModal = ({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition"
+            style={{
+              background: "rgba(6,20,42,.7)",
+              border: "1px solid #17385f",
+              color: "#aebfd5",
+            }}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white transition flex items-center justify-center gap-2 disabled:opacity-50 hover:brightness-110"
+            style={{
+              background: "linear-gradient(100deg, #e5395e, #c81c3c)",
+            }}
           >
             {isDeleting ? (
               <>
@@ -96,7 +136,6 @@ const DeleteConfirmModal = ({
 // ================================================================
 // MAIN COMPONENT
 // ================================================================
-
 const AIRankerChat = () => {
   const navigate = useNavigate();
   const { chatId } = useParams();
@@ -150,7 +189,7 @@ const AIRankerChat = () => {
       const response = await api.get("/ai-ranker/chats");
       if (response.data?.success) {
         const filtered = response.data.chats.filter(
-          (chat) => chat.agentSlug === agentSlug && chat.id !== chatId,
+          (chat) => chat.agentSlug === agentSlug && chat.id !== chatId
         );
         setChatHistory(filtered);
       }
@@ -159,10 +198,6 @@ const AIRankerChat = () => {
     }
   };
 
-  // ================================================================
-  // DELETE CHAT
-  // ================================================================
-
   const openDeleteModal = (chatItem) => {
     setChatToDelete(chatItem);
     setShowDeleteModal(true);
@@ -170,11 +205,7 @@ const AIRankerChat = () => {
 
   const confirmDelete = async () => {
     if (!chatToDelete) return;
-
-    // ✅ Use id (not _id) - matches what API returns
     const chatIdToDelete = chatToDelete.id;
-
-
     setDeletingChat(chatIdToDelete);
 
     try {
@@ -196,10 +227,6 @@ const AIRankerChat = () => {
       setDeletingChat(null);
     }
   };
-
-  // ================================================================
-  // SEND MESSAGE
-  // ================================================================
 
   const sendMessage = async () => {
     const message = input.trim();
@@ -225,18 +252,15 @@ const AIRankerChat = () => {
     });
 
     try {
-
       const response = await api.post(`/ai-ranker/chat/${chatId}`, {
         message: messageToSend,
       });
 
       if (response.data?.success) {
-
         const updatedChatResponse = await api.get(`/ai-ranker/chat/${chatId}`);
         if (updatedChatResponse.data?.success) {
           setChat(updatedChatResponse.data.chat);
         }
-
         if (chat?.agentSlug) {
           await loadChatHistory(chat.agentSlug);
         }
@@ -247,7 +271,7 @@ const AIRankerChat = () => {
           return {
             ...prev,
             messages: (prev.messages || []).filter(
-              (m) => m.id !== tempMessage.id,
+              (m) => m.id !== tempMessage.id
             ),
           };
         });
@@ -261,9 +285,7 @@ const AIRankerChat = () => {
         if (!prev) return prev;
         return {
           ...prev,
-          messages: (prev.messages || []).filter(
-            (m) => m.id !== tempMessage.id,
-          ),
+          messages: (prev.messages || []).filter((m) => m.id !== tempMessage.id),
         };
       });
       setInput(messageToSend);
@@ -316,7 +338,6 @@ const AIRankerChat = () => {
   // ================================================================
   // FORMAT MESSAGE
   // ================================================================
-
   const formatMessage = (content) => {
     if (!content) return null;
 
@@ -329,14 +350,22 @@ const AIRankerChat = () => {
 
       if (lineStr.startsWith("## ")) {
         return (
-          <h3 key={i} className="text-base font-bold mt-4 mb-1 text-gray-800">
+          <h3
+            key={i}
+            className="text-base font-bold mt-4 mb-1"
+            style={{ color: "#eaf1ff" }}
+          >
             {lineStr.slice(3)}
           </h3>
         );
       }
       if (lineStr.startsWith("### ")) {
         return (
-          <h4 key={i} className="text-sm font-semibold mt-3 mb-1 text-gray-700">
+          <h4
+            key={i}
+            className="text-sm font-semibold mt-3 mb-1"
+            style={{ color: "#c9b5ff" }}
+          >
             {lineStr.slice(4)}
           </h4>
         );
@@ -350,13 +379,13 @@ const AIRankerChat = () => {
               const partStr = part || "";
               if (idx % 2 === 1) {
                 return (
-                  <strong key={idx} className="text-gray-800">
+                  <strong key={idx} style={{ color: "#eaf1ff" }}>
                     {partStr}
                   </strong>
                 );
               }
               return (
-                <span key={idx} className="text-gray-700">
+                <span key={idx} style={{ color: "#aebfd5" }}>
                   {partStr}
                 </span>
               );
@@ -368,8 +397,10 @@ const AIRankerChat = () => {
       if (lineStr.startsWith("- ") || lineStr.startsWith("• ")) {
         return (
           <div key={i} className="flex items-start gap-2 ml-2">
-            <span className="text-emerald-500 mt-1.5">•</span>
-            <span className="text-sm text-gray-700">{lineStr.slice(2)}</span>
+            <span style={{ color: "#c9b5ff", marginTop: 6 }}>•</span>
+            <span className="text-sm" style={{ color: "#aebfd5" }}>
+              {lineStr.slice(2)}
+            </span>
           </div>
         );
       }
@@ -378,10 +409,13 @@ const AIRankerChat = () => {
         const match = lineStr.match(/^(\d+)\./);
         return (
           <div key={i} className="flex items-start gap-2 ml-2">
-            <span className="text-emerald-500 text-sm font-medium mt-0.5">
+            <span
+              className="text-sm font-medium mt-0.5"
+              style={{ color: "#c9b5ff" }}
+            >
               {match ? match[1] : ""}.
             </span>
-            <span className="text-sm text-gray-700">
+            <span className="text-sm" style={{ color: "#aebfd5" }}>
               {lineStr.replace(/^\d+\.\s*/, "")}
             </span>
           </div>
@@ -392,7 +426,12 @@ const AIRankerChat = () => {
         return (
           <div
             key={i}
-            className="bg-gray-900 text-green-400 p-4 rounded-xl my-2 text-xs font-mono overflow-x-auto"
+            className="p-4 rounded-xl my-2 text-xs font-mono overflow-x-auto"
+            style={{
+              background: "#020713",
+              border: "1px solid #17385f",
+              color: "#0ce4bd",
+            }}
           >
             {lineStr.slice(3, -3)}
           </div>
@@ -409,14 +448,19 @@ const AIRankerChat = () => {
                 return (
                   <code
                     key={idx}
-                    className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-emerald-600"
+                    className="px-1.5 py-0.5 rounded text-xs font-mono"
+                    style={{
+                      background: "rgba(110,53,237,.15)",
+                      border: "1px solid rgba(150,120,255,.3)",
+                      color: "#c9b5ff",
+                    }}
                   >
                     {partStr}
                   </code>
                 );
               }
               return (
-                <span key={idx} className="text-gray-700">
+                <span key={idx} style={{ color: "#aebfd5" }}>
                   {partStr}
                 </span>
               );
@@ -430,7 +474,7 @@ const AIRankerChat = () => {
       }
 
       return (
-        <p key={i} className="text-sm leading-relaxed text-gray-700">
+        <p key={i} className="text-sm leading-relaxed" style={{ color: "#aebfd5" }}>
           {lineStr}
         </p>
       );
@@ -439,15 +483,26 @@ const AIRankerChat = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen" style={{ background: "#020914" }}>
         <Sidebar />
         <div className="flex-1 ml-0 md:ml-[18rem] flex items-center justify-center">
           <div className="text-center">
             <div className="relative w-12 h-12 mx-auto mb-4">
-              <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-t-emerald-600 rounded-full animate-spin"></div>
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{ border: "4px solid rgba(110,53,237,.15)" }}
+              ></div>
+              <div
+                className="absolute inset-0 rounded-full animate-spin"
+                style={{
+                  border: "4px solid #6e35ed",
+                  borderTopColor: "transparent",
+                }}
+              ></div>
             </div>
-            <p className="text-sm text-gray-500">Loading conversation...</p>
+            <p className="text-sm" style={{ color: "#8fa0ba" }}>
+              Loading conversation...
+            </p>
           </div>
         </div>
       </div>
@@ -462,7 +517,7 @@ const AIRankerChat = () => {
     name: chat.agentName,
     slug: chat.agentSlug,
     icon: "fa-chart-line",
-    color: "#10b981",
+    color: "#6e35ed",
     role: "SEO Specialist",
   };
 
@@ -476,28 +531,42 @@ const AIRankerChat = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen overflow-hidden" style={{ background: "#020914" }}>
       <Sidebar />
 
       <div className="flex-1 ml-0 md:ml-[18rem] flex flex-col overflow-hidden">
         <Navbar />
 
         <div className="flex-1 flex overflow-hidden gap-0 md:gap-4 p-2 md:p-4">
-          {/* Main Chat Area - Left Side */}
-          <div className="flex-1 flex flex-col overflow-hidden bg-white rounded-2xl shadow-2xl">
+          {/* Main Chat Area */}
+          <div
+            className="flex-1 flex flex-col overflow-hidden rounded-2xl"
+            style={{
+              background: "linear-gradient(180deg, #06162b, #041124)",
+              border: "1px solid #17385f",
+              boxShadow: "0 16px 48px rgba(0,0,0,.4)",
+            }}
+          >
             {/* Header */}
-            <div className="flex-shrink-0 px-4 md:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50/50">
+            <div
+              className="flex-shrink-0 px-4 md:px-6 py-4"
+              style={{ borderBottom: "1px solid #17385f" }}
+            >
               <div className="flex items-center gap-3 max-w-4xl mx-auto w-full">
                 <button
                   onClick={handleBack}
-                  className="w-9 h-9 rounded-full hover:bg-gray-100 transition flex items-center justify-center"
+                  className="w-9 h-9 rounded-full transition flex items-center justify-center"
+                  style={{ background: "rgba(6,20,42,.6)" }}
                 >
-                  <ArrowLeft size={18} className="text-gray-500" />
+                  <ArrowLeft size={18} style={{ color: "#aebfd5" }} />
                 </button>
 
                 <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
-                  style={{ backgroundColor: agent.color + "20" }}
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  style={{
+                    backgroundColor: agent.color + "25",
+                    border: `1px solid ${agent.color}50`,
+                  }}
                 >
                   <i
                     className={`fas ${agent.icon} text-lg`}
@@ -506,25 +575,42 @@ const AIRankerChat = () => {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-semibold text-gray-900 truncate">
+                  <h3
+                    className="text-base font-semibold truncate"
+                    style={{ color: "#eaf1ff" }}
+                  >
                     {chat.title || chat.agentName}
                   </h3>
-                  <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block animate-pulse"></span>
+                  <p
+                    className="text-xs flex items-center gap-1.5"
+                    style={{ color: "#8fa0ba" }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full inline-block animate-pulse"
+                      style={{ background: "#0ce4bd", boxShadow: "0 0 8px #0ce4bd" }}
+                    ></span>
                     {agent.name} • {agent.role}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full hidden sm:inline-block">
+                  <span
+                    className="text-xs px-3 py-1 rounded-full hidden sm:inline-block"
+                    style={{
+                      background: "rgba(6,20,42,.7)",
+                      border: "1px solid #17385f",
+                      color: "#8fa0ba",
+                    }}
+                  >
                     {chat.messageCount || 0} messages
                   </span>
 
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="md:hidden w-9 h-9 rounded-lg hover:bg-gray-100 transition flex items-center justify-center"
+                    className="md:hidden w-9 h-9 rounded-lg transition flex items-center justify-center"
+                    style={{ background: "rgba(6,20,42,.6)" }}
                   >
-                    <History size={18} className="text-gray-500" />
+                    <History size={18} style={{ color: "#aebfd5" }} />
                   </button>
                 </div>
               </div>
@@ -546,30 +632,53 @@ const AIRankerChat = () => {
                       }}
                     >
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${
+                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={
                           msg.role === "user"
-                            ? "bg-gradient-to-br from-gray-700 to-gray-900"
-                            : "bg-gradient-to-br from-emerald-500 to-teal-500"
-                        }`}
+                            ? {
+                                background:
+                                  "linear-gradient(135deg, #6e35ed, #3483ff)",
+                                boxShadow: "0 4px 12px rgba(110,53,237,.4)",
+                              }
+                            : {
+                                background:
+                                  "linear-gradient(135deg, #6e35ed, #3483ff)",
+                                boxShadow: "0 4px 12px rgba(110,53,237,.4)",
+                              }
+                        }
                       >
                         <i
-                          className={`fas ${msg.role === "user" ? "fa-user" : agent.icon} text-white text-xs`}
+                          className={`fas ${
+                            msg.role === "user" ? "fa-user" : agent.icon
+                          } text-white text-xs`}
                         ></i>
                       </div>
 
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                        className={`max-w-[85%] rounded-2xl px-4 py-3`}
+                        style={
                           msg.role === "user"
-                            ? "bg-emerald-600 text-white rounded-tr-none"
-                            : "bg-white border border-gray-100 shadow-md rounded-tl-none"
-                        }`}
+                            ? {
+                                background:
+                                  "linear-gradient(100deg, #6e35ed, #3483ff)",
+                                color: "#ffffff",
+                                borderTopRightRadius: 4,
+                                boxShadow: "0 4px 14px rgba(110,53,237,.35)",
+                              }
+                            : {
+                                background: "rgba(6,20,42,.75)",
+                                border: "1px solid #17385f",
+                                borderTopLeftRadius: 4,
+                                boxShadow: "0 4px 14px rgba(0,0,0,.35)",
+                              }
+                        }
                       >
                         {msg.role === "user" ? (
                           <p className="text-sm leading-relaxed whitespace-pre-wrap text-white">
                             {msg.content}
                           </p>
                         ) : (
-                          <div className="text-sm leading-relaxed whitespace-pre-wrap text-gray-800">
+                          <div className="text-sm leading-relaxed whitespace-pre-wrap">
                             {formatMessage(msg.content)}
                           </div>
                         )}
@@ -579,18 +688,27 @@ const AIRankerChat = () => {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
                     <div
-                      className="w-24 h-24 rounded-3xl flex items-center justify-center mb-6 shadow-xl"
-                      style={{ backgroundColor: agent.color + "15" }}
+                      className="w-24 h-24 rounded-3xl flex items-center justify-center mb-6"
+                      style={{
+                        backgroundColor: agent.color + "18",
+                        border: `1px solid ${agent.color}40`,
+                      }}
                     >
                       <i
                         className={`fas ${agent.icon} text-4xl`}
                         style={{ color: agent.color }}
                       ></i>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    <h3
+                      className="text-xl font-bold mb-2"
+                      style={{ color: "#eaf1ff" }}
+                    >
                       Chat with {agent.name}
                     </h3>
-                    <p className="text-sm text-gray-500 max-w-md">
+                    <p
+                      className="text-sm max-w-md"
+                      style={{ color: "#8fa0ba" }}
+                    >
                       {agent.description || `Ask me about ${agent.role}`}
                     </p>
                     <div className="mt-8 flex flex-wrap gap-2 justify-center max-w-lg">
@@ -601,7 +719,25 @@ const AIRankerChat = () => {
                             setInput(suggestion);
                             setTimeout(sendMessage, 100);
                           }}
-                          className="px-4 py-2 bg-white border border-gray-200 rounded-full text-xs text-gray-600 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition shadow-sm hover:shadow-md"
+                          className="px-4 py-2 rounded-full text-xs transition"
+                          style={{
+                            background: "rgba(6,20,42,.7)",
+                            border: "1px solid #17385f",
+                            color: "#aebfd5",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor =
+                              "rgba(150,120,255,.6)";
+                            e.currentTarget.style.color = "#c9b5ff";
+                            e.currentTarget.style.background =
+                              "linear-gradient(100deg, rgba(110,53,237,.2), rgba(52,131,255,.15))";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = "#17385f";
+                            e.currentTarget.style.color = "#aebfd5";
+                            e.currentTarget.style.background =
+                              "rgba(6,20,42,.7)";
+                          }}
                         >
                           {suggestion}
                         </button>
@@ -612,23 +748,38 @@ const AIRankerChat = () => {
 
                 {sending && (
                   <div className="flex items-end gap-3 animate-slideIn">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-emerald-500 to-teal-500 shadow-sm">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #6e35ed, #3483ff)",
+                        boxShadow: "0 4px 12px rgba(110,53,237,.4)",
+                      }}
+                    >
                       <i className={`fas ${agent.icon} text-white text-xs`}></i>
                     </div>
-                    <div className="bg-white border border-gray-100 shadow-md rounded-2xl rounded-tl-none px-5 py-3">
+                    <div
+                      className="rounded-2xl px-5 py-3"
+                      style={{
+                        background: "rgba(6,20,42,.75)",
+                        border: "1px solid #17385f",
+                        borderTopLeftRadius: 4,
+                      }}
+                    >
                       <div className="flex items-center gap-2">
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"></div>
-                          <div
-                            className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.15s" }}
-                          ></div>
-                          <div
-                            className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.3s" }}
-                          ></div>
+                          {[0, 1, 2].map((i) => (
+                            <div
+                              key={i}
+                              className="w-2 h-2 rounded-full animate-bounce"
+                              style={{
+                                background: "#c9b5ff",
+                                animationDelay: `${i * 0.15}s`,
+                              }}
+                            ></div>
+                          ))}
                         </div>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs" style={{ color: "#8fa0ba" }}>
                           Analyzing SEO...
                         </span>
                       </div>
@@ -640,9 +791,28 @@ const AIRankerChat = () => {
             </div>
 
             {/* Input */}
-            <div className="flex-shrink-0 px-4 md:px-6 py-4 border-t border-gray-100 bg-gradient-to-r from-white to-gray-50/50">
+            <div
+              className="flex-shrink-0 px-4 md:px-6 py-4"
+              style={{ borderTop: "1px solid #17385f" }}
+            >
               <div className="max-w-3xl mx-auto w-full">
-                <div className="flex items-end gap-2 bg-white border-2 border-gray-200 rounded-2xl p-1.5 focus-within:border-emerald-500 focus-within:shadow-lg focus-within:shadow-emerald-500/10 transition-all duration-200">
+                <div
+                  className="flex items-end gap-2 rounded-2xl p-1.5 transition-all duration-200"
+                  style={{
+                    background: "rgba(6,20,42,.55)",
+                    border: "2px solid #17385f",
+                  }}
+                  onFocusCapture={(e) => {
+                    e.currentTarget.style.borderColor =
+                      "rgba(150,120,255,.6)";
+                    e.currentTarget.style.boxShadow =
+                      "0 0 0 4px rgba(110,53,237,.12)";
+                  }}
+                  onBlurCapture={(e) => {
+                    e.currentTarget.style.borderColor = "#17385f";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
                   <textarea
                     ref={inputRef}
                     value={input}
@@ -651,13 +821,18 @@ const AIRankerChat = () => {
                     placeholder={`Ask ${agent.name} about SEO...`}
                     disabled={sending}
                     rows={1}
-                    className="flex-1 px-4 py-3 bg-transparent border-0 focus:outline-none resize-none text-sm text-gray-700 placeholder-gray-400 disabled:opacity-50 min-h-[40px] max-h-[200px]"
+                    className="flex-1 px-4 py-3 bg-transparent border-0 focus:outline-none resize-none text-sm disabled:opacity-50 min-h-[40px] max-h-[200px]"
+                    style={{ color: "#eaf1ff", caretColor: "#c9b5ff" }}
                   />
 
                   <button
                     onClick={sendMessage}
                     disabled={!input.trim() || sending}
-                    className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                    className="w-9 h-9 rounded-full text-white transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0 hover:scale-105 active:scale-95"
+                    style={{
+                      background: "linear-gradient(135deg, #6e35ed, #3483ff)",
+                      boxShadow: "0 4px 14px rgba(110,53,237,.4)",
+                    }}
                   >
                     {sending ? (
                       <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
@@ -685,109 +860,182 @@ const AIRankerChat = () => {
             </div>
           </div>
 
-          {/* Chat History - Right Side */}
+          {/* Chat History */}
           <div
             className={`
-            fixed md:relative inset-y-0 right-0 w-80 md:w-72 lg:w-80 
-            bg-white shadow-2xl md:shadow-lg 
-            transform transition-transform duration-300 ease-in-out
-            ${showHistory ? "translate-x-0" : "translate-x-full md:translate-x-0"}
-            md:block flex-shrink-0 rounded-2xl md:rounded-2xl overflow-hidden
-            z-30 md:z-auto
-          `}
+              fixed md:relative inset-y-0 right-0 w-80 md:w-72 lg:w-80 
+              transform transition-transform duration-300 ease-in-out
+              ${showHistory ? "translate-x-0" : "translate-x-full md:translate-x-0"}
+              md:block flex-shrink-0 rounded-2xl overflow-hidden
+              z-30 md:z-auto
+            `}
+            style={{
+              background: "linear-gradient(180deg, #06162b, #041124)",
+              border: "1px solid #17385f",
+              boxShadow: "0 16px 48px rgba(0,0,0,.4)",
+            }}
           >
             <button
               onClick={() => setShowHistory(false)}
-              className="md:hidden absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center"
+              className="md:hidden absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center"
+              style={{
+                background: "#041124",
+                border: "1px solid #17385f",
+              }}
             >
-              <X size={18} className="text-gray-500" />
+              <X size={18} style={{ color: "#aebfd5" }} />
             </button>
 
             <div className="flex flex-col h-full">
               {/* History Header */}
-              <div className="flex-shrink-0 px-4 py-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
+              <div
+                className="flex-shrink-0 px-4 py-4"
+                style={{ borderBottom: "1px solid #17385f" }}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center shadow-sm">
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, #6e35ed, #3483ff)",
+                      boxShadow: "0 4px 12px rgba(110,53,237,.4)",
+                    }}
+                  >
                     <History size={16} className="text-white" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-800">
+                    <h4
+                      className="text-sm font-semibold"
+                      style={{ color: "#eaf1ff" }}
+                    >
                       SEO Chat History
                     </h4>
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px]" style={{ color: "#7d8fa8" }}>
                       {chatHistory.length} conversations with {agent.name}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* History List with Delete Button */}
+              {/* History List */}
               <div className="flex-1 overflow-y-auto px-2 py-3">
                 {chatHistory.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                      <MessageSquare size={24} className="text-gray-400" />
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
+                      style={{
+                        background: "rgba(6,20,42,.7)",
+                        border: "1px solid #17385f",
+                      }}
+                    >
+                      <MessageSquare size={24} style={{ color: "#7d8fa8" }} />
                     </div>
-                    <p className="text-sm font-medium text-gray-500">
+                    <p
+                      className="text-sm font-medium"
+                      style={{ color: "#8fa0ba" }}
+                    >
                       No previous chats
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs mt-1" style={{ color: "#7d8fa8" }}>
                       Start a new SEO conversation
                     </p>
                   </div>
                 ) : (
                   chatHistory.map((chatItem) => {
                     const itemId = chatItem.id || chatItem._id;
+                    const isActive = itemId === chatId;
                     return (
                       <div
                         key={itemId}
-                        className={`group relative px-3 py-2.5 rounded-xl transition-all duration-200 flex items-start gap-3 mb-1 ${
-                          itemId === chatId
-                            ? "bg-emerald-50 border-2 border-emerald-300 shadow-sm"
-                            : "hover:bg-gray-50 border-2 border-transparent hover:border-emerald-200"
-                        }`}
+                        className="group relative px-3 py-2.5 rounded-xl transition-all duration-200 flex items-start gap-3 mb-1"
+                        style={{
+                          background: isActive
+                            ? "linear-gradient(100deg, rgba(110,53,237,.2), rgba(52,131,255,.12))"
+                            : "transparent",
+                          border: isActive
+                            ? "1px solid rgba(150,120,255,.5)"
+                            : "1px solid transparent",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isActive) {
+                            e.currentTarget.style.background =
+                              "rgba(80,150,255,.06)";
+                            e.currentTarget.style.borderColor =
+                              "rgba(80,150,255,.2)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isActive) {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.borderColor = "transparent";
+                          }
+                        }}
                       >
                         <button
                           onClick={() => handleSelectChat(itemId)}
                           className="flex-1 flex items-start gap-3 min-w-0 text-left"
                         >
-                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                            style={{
+                              background: "rgba(6,20,42,.8)",
+                              border: "1px solid rgba(150,120,255,.3)",
+                            }}
+                          >
                             <i
-                              className={`fas ${agent.icon} text-emerald-500 text-xs`}
+                              className={`fas ${agent.icon} text-xs`}
+                              style={{ color: "#c9b5ff" }}
                             ></i>
                           </div>
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
                               <span
-                                className={`text-sm font-medium truncate ${
-                                  itemId === chatId
-                                    ? "text-emerald-700"
-                                    : "text-gray-800"
-                                } group-hover:text-emerald-600 transition-colors`}
+                                className="text-sm font-medium truncate"
+                                style={{
+                                  color: isActive ? "#c9b5ff" : "#eaf1ff",
+                                }}
                               >
                                 {chatItem.title || chatItem.agentName}
                               </span>
-                              <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">
+                              <span
+                                className="text-[10px] whitespace-nowrap ml-2"
+                                style={{ color: "#7d8fa8" }}
+                              >
                                 {formatDate(chatItem.lastMessageAt)}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-400 truncate mt-0.5">
+                            <p
+                              className="text-xs truncate mt-0.5"
+                              style={{ color: "#7d8fa8" }}
+                            >
                               {chatItem.preview ||
                                 `${chatItem.messageCount || 0} messages`}
                             </p>
                           </div>
                         </button>
 
-                        {/* Delete Button - Opens Modal */}
+                        {/* Delete Button */}
                         <button
                           onClick={() => openDeleteModal(chatItem)}
                           disabled={deletingChat === itemId}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all duration-200 disabled:opacity-50"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 disabled:opacity-50"
+                          style={{ color: "#7d8fa8" }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = "#ff8fa8";
+                            e.currentTarget.style.background =
+                              "rgba(255,95,126,.15)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = "#7d8fa8";
+                            e.currentTarget.style.background = "transparent";
+                          }}
                           title="Delete chat"
                         >
                           {deletingChat === itemId ? (
-                            <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                            <div
+                              className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+                              style={{ borderColor: "#ff8fa8" }}
+                            ></div>
                           ) : (
                             <Trash2 size={14} />
                           )}
@@ -799,10 +1047,17 @@ const AIRankerChat = () => {
               </div>
 
               {/* New Chat Button */}
-              <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 bg-gray-50/50">
+              <div
+                className="flex-shrink-0 px-4 py-3"
+                style={{ borderTop: "1px solid #17385f" }}
+              >
                 <button
                   onClick={() => navigate("/ai-ranker")}
-                  className="w-full px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-medium rounded-xl hover:from-emerald-700 hover:to-teal-700 transition shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2.5 text-white text-sm font-medium rounded-xl transition flex items-center justify-center gap-2 hover:brightness-110"
+                  style={{
+                    background: "linear-gradient(100deg, #6e35ed, #3483ff)",
+                    boxShadow: "0 6px 18px rgba(110,53,237,.35)",
+                  }}
                 >
                   <Plus size={16} />
                   New SEO Chat
@@ -813,7 +1068,6 @@ const AIRankerChat = () => {
         </div>
       </div>
 
-      {/* ✅ DELETE CONFIRMATION MODAL */}
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => {
