@@ -174,37 +174,6 @@ function LoginAnimationStyles() {
   );
 }
 
-// ================================================================
-// BRAND MARK (animated bars)
-// ================================================================
-function BrandMark({ small = false }) {
-  const sizes = small ? [13, 22, 31, 22, 13] : [18, 29, 39, 28, 17];
-  const widths = small ? 5 : 8;
-
-  return (
-    <div
-      className="flex items-center justify-center"
-      style={{ gap: "5px" }}
-      aria-hidden="true"
-    >
-      {sizes.map((h, i) => (
-        <span
-          key={i}
-          className="login-bar"
-          style={{
-            display: "block",
-            width: `${widths}px`,
-            height: `${h}px`,
-            borderRadius: "99px",
-            background: "linear-gradient(180deg, #3d9fff, #7b45ef)",
-            boxShadow: "0 0 12px rgba(72,119,255,.3)",
-            animationDelay: `${i * 0.15}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 // ================================================================
 // FEATURE ICON (left hero)
@@ -284,27 +253,7 @@ function LeftHero() {
           className="login-anim-up flex shrink-0 items-center gap-3"
           style={{ animationDelay: ".05s" }}
         >
-          <BrandMark />
-          <div
-            className="font-medium leading-none text-[#f5f7fb]"
-            style={{
-              fontSize: "clamp(26px, 2.4vw, 38px)",
-              letterSpacing: "-1.6px",
-            }}
-          >
-            Podcast
-            <b
-              className="font-medium"
-              style={{
-                background: "linear-gradient(90deg, #6e63ff, #218fff)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              AI
-            </b>
-          </div>
+         <img src={logo} alt="Podcast AI" />
         </div>
 
         {/* Middle */}
