@@ -30,6 +30,9 @@ import AdminDashboard from "./pages/admin/Dashboard";
 // Agency
 import Agency from "./pages/agency/Agency";
 
+import VisualLibraryPage from "./components/dfy/VisualLibraryPage";
+import VideoLibraryPage from "./components/dfy/VideoLibraryPage";
+
 // OTOs
 import Unlimited from "./pages/otos/Unlimited";
 import PodcastCreatorPro from "./pages/otos/PodcastCreatorPro";
@@ -37,6 +40,8 @@ import ViralShortsAI from "./pages/otos/ViralShortsAI";
 import PodcastGrowthStudio from "./pages/otos/PodcastGrowthStudio";
 import BrandingSuite from "./pages/otos/BrandingSuite";
 import Reseller from "./pages/otos/Reseller";
+import AIRanker from "./pages/ranker/AIRanker";
+import AIRankerChat from "./pages/ranker/AIRankerChat";
 
 // Support
 import Training from "./pages/support/Training";
@@ -65,8 +70,10 @@ const Layout = ({ children }) => {
     "/viral-shorts-ai",
     "/podcast-growth-studio",
     "/branding-suite",
+    "/dfy-podcast-pack",
     "/training",
     "/support",
+    "/ai-ranker",
     "/settings",
     "/subscription",
     "/reseller",
@@ -200,6 +207,24 @@ function App() {
             />
 
             <Route
+              path="/dfy-podcast-pack"
+              element={
+                <PrivateRoute>
+                  <FeatureRoute feature="dfy">
+                    <VideoLibraryPage
+                      apiKey={
+                        import.meta.env.VITE_PEXELS_API_KEY ||
+                        "YOUR_PEXELS_API_KEY"
+                      }
+                      defaultQuery="Technology"
+                      perPage={12}
+                    />
+                  </FeatureRoute>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
               path="/podcast-creator-pro"
               element={
                 <PrivateRoute>
@@ -238,6 +263,27 @@ function App() {
                 <PrivateRoute>
                   <FeatureRoute feature="brandingSuite">
                     <BrandingSuite />
+                  </FeatureRoute>
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/ai-ranker"
+              element={
+                <PrivateRoute>
+                  <FeatureRoute feature="ranker">
+                   <AIRanker />
+                  </FeatureRoute>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/ai-ranker/chat/:chatId"
+              element={
+                <PrivateRoute>
+                  <FeatureRoute feature="ranker">
+                   <AIRankerChat />
                   </FeatureRoute>
                 </PrivateRoute>
               }
