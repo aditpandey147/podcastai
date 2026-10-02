@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import logo from "../../assets/nav-logo.png";
 import loginBg from "../../assets/login-img.png";
 import {
   Eye,
@@ -177,37 +178,6 @@ function LoginAnimationStyles() {
   );
 }
 
-// ================================================================
-// BRAND MARK (animated bars)
-// ================================================================
-function BrandMark({ small = false }) {
-  const sizes = small ? [13, 22, 31, 22, 13] : [18, 29, 39, 28, 17];
-  const widths = small ? 5 : 8;
-
-  return (
-    <div
-      className="flex items-center justify-center"
-      style={{ gap: "5px" }}
-      aria-hidden="true"
-    >
-      {sizes.map((h, i) => (
-        <span
-          key={i}
-          className="login-bar"
-          style={{
-            display: "block",
-            width: `${widths}px`,
-            height: `${h}px`,
-            borderRadius: "99px",
-            background: "linear-gradient(180deg, #3d9fff, #7b45ef)",
-            boxShadow: "0 0 12px rgba(72,119,255,.3)",
-            animationDelay: `${i * 0.15}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 // ================================================================
 // FEATURE ICON (left hero)
@@ -277,7 +247,7 @@ function LeftHero() {
         height: "100vh",
         background: "transparent",
       }}
-    >
+     >
       <div
         className="relative z-10 flex h-full flex-col"
         style={{ padding: "5vh 6% 4vh" }}
@@ -286,28 +256,8 @@ function LeftHero() {
         <div
           className="login-anim-up flex shrink-0 items-center gap-3"
           style={{ animationDelay: ".05s" }}
-        >
-          <BrandMark />
-          <div
-            className="font-medium leading-none text-[#f5f7fb]"
-            style={{
-              fontSize: "clamp(26px, 2.4vw, 38px)",
-              letterSpacing: "-1.6px",
-            }}
-          >
-            Podcast
-            <b
-              className="font-medium"
-              style={{
-                background: "linear-gradient(90deg, #6e63ff, #218fff)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              AI
-            </b>
-          </div>
+         >
+          <img src={logo} alt="Podcast AI" />
         </div>
 
         {/* Middle */}
@@ -440,24 +390,7 @@ function LoginCard({
     >
       {/* LOGO */}
       <div className="flex items-center justify-center" style={{ gap: 10 }}>
-        <BrandMark small />
-        <div
-          className="font-medium leading-none text-[#f5f7fb]"
-          style={{ fontSize: 25, letterSpacing: "-1.2px" }}
-        >
-          Podcast
-          <b
-            className="font-medium"
-            style={{
-              background: "linear-gradient(90deg, #6e63ff, #218fff)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-            }}
-          >
-            AI
-          </b>
-        </div>
+        <img src={logo} alt="Podcast AI" />
       </div>
 
       {/* HEADER */}
@@ -748,7 +681,7 @@ function LoginCard({
           Need Support?{" "}
           <Link
             to="/support"
-            className="font-medium text-blue-400 transition hover:text-blue-300"
+            className="font-medium text-white transition hover:text-blue-300"
             style={{ marginLeft: 3 }}
           >
             Contact Support
