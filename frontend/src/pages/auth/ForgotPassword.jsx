@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import loginBg from "../../assets/login-img.png";
+import logo from "../../assets/nav-logo.png";
 import {
   ArrowRight,
   Mail,
@@ -424,24 +425,7 @@ function ForgotPasswordCard({ email, setEmail, loading, handleSubmit, sent }) {
     >
       {/* LOGO */}
       <div className="flex items-center justify-center" style={{ gap: 10 }}>
-        <BrandMark small />
-        <div
-          className="font-medium leading-none text-[#f5f7fb]"
-          style={{ fontSize: 25, letterSpacing: "-1.2px" }}
-        >
-          Podcast
-          <b
-            className="font-medium"
-            style={{
-              background: "linear-gradient(90deg, #6e63ff, #218fff)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-            }}
-          >
-            AI
-          </b>
-        </div>
+        <img src={logo} alt="Podcast AI" />
       </div>
 
       {/* HEADER */}
