@@ -6,12 +6,6 @@ const Video = require("../models/Video");
 const ai = require("../services/aiService");
 
 // ================================================================
-// 🖼️ FIXED TEST IMAGE — used for testing (remove when going live)
-// ================================================================
-const TEST_IMAGE_URL =
-  "https://multichannel.softprohub.com/theme/multichannel/img/templates/ai-technology/03-ai-smart-city.png";
-
-// ================================================================
 // 📁 VIDEOS DIRECTORY
 // ================================================================
 const VIDEOS_DIR = path.join(__dirname, "..", "uploads", "videos");
@@ -24,6 +18,23 @@ if (!fs.existsSync(VIDEOS_DIR)) {
 // ================================================================
 function getUserId(req) {
   return req.user?.userId || req.user?.id || req.user?._id || null;
+}
+
+// ================================================================
+// Helper — build an absolute URL from a possibly-relative path
+// ================================================================
+function buildAbsoluteUrl(input) {
+  if (!input) return "";
+  // Already absolute?
+  if (/^https?:\/\//i.test(input)) return input;
+
+  const SERVER_URL =
+    process.env.SERVER_URL ||
+    process.env.BACKEND_URL ||
+    `http://localhost:${process.env.PORT || 5000}`;
+
+  const cleanPath = input.startsWith("/") ? input : `/${input}`;
+  return `${SERVER_URL}${cleanPath}`;
 }
 
 // ================================================================
@@ -42,7 +53,7 @@ async function downloadVideoToLocal(remoteUrl, videoId) {
     method: "GET",
     url: remoteUrl,
     responseType: "stream",
-    timeout: 120000, // 2 minutes
+    timeout: 120000,
   });
 
   await new Promise((resolve, reject) => {
@@ -85,10 +96,20 @@ exports.generateVideo = async (req, res) => {
       coverImage,
     } = req.body;
 
-    // 🖼️ Test mode — always use the fixed image
-    const imageUrl = TEST_IMAGE_URL;
-    console.log("🖼️ Using image:", imageUrl);
-    console.log("🎬 Incoming image (ignored):", incomingImageUrl);
+    // 🎯 Use the user-selected image
+    const rawImageUrl = incomingImageUrl || coverImage || "";
+
+    if (!rawImageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "No image selected — please choose a template or image",
+      });
+    }
+
+    // Convert relative → absolute (Replicate needs a public URL)
+    const imageUrl = buildAbsoluteUrl(rawImageUrl);
+
+    console.log("🖼️ Using user image:", imageUrl);
 
     if (!hostLine || !guestLine) {
       return res
@@ -102,7 +123,7 @@ exports.generateVideo = async (req, res) => {
       templateId: templateId || null,
       title: templateTitle || "Untitled Podcast",
       category: templateCategory || "",
-      coverImage: imageUrl,
+      coverImage: imageUrl, // save the actual image URL used
       hostLine,
       guestLine,
       tone,
@@ -189,7 +210,6 @@ Write the image-to-video prompt.`,
   } catch (err) {
     console.error("processVideo error:", err.response?.data || err.message);
 
-    // Clean up partial local file if download started but failed
     if (localVideoPath) {
       try {
         const filePath = path.join(VIDEOS_DIR, path.basename(localVideoPath));
