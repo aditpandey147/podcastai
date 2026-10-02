@@ -34,6 +34,8 @@ import {
   TrendingUp,
   Palette,
   Building2,
+  Package,
+  BarChart3,
 } from "lucide-react";
 
 // ================================================================
@@ -199,6 +201,16 @@ const Sidebar = () => {
       icon: Palette,
       show: has("brandingSuite"),
     },
+    {
+      path: "/dfy-podcast-pack",
+      label: "DFY Podcast Pack",
+      icon: Package,
+      show: has("dfy"),
+    },
+    { path: "/ai-ranker",
+      label: "AI Ranker", 
+      icon: BarChart3, 
+      show: has("aiRanker") },
     {
       path: "/agency",
       label: "Agency",
