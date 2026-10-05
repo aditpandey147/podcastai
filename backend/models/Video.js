@@ -22,6 +22,7 @@ const videoSchema = new mongoose.Schema(
 
     videoPrompt: { type: String, default: "" },
     videoUrl: { type: String, default: "" },
+    localVideoUrl: { type: String, default: "" },
 
     status: {
       type: String,
