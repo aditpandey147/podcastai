@@ -25,7 +25,6 @@ function getUserId(req) {
 // ================================================================
 function buildAbsoluteUrl(input) {
   if (!input) return "";
-  // Already absolute?
   if (/^https?:\/\//i.test(input)) return input;
 
   const SERVER_URL =
@@ -39,7 +38,6 @@ function buildAbsoluteUrl(input) {
 
 // ================================================================
 // Helper — download a remote video URL → local file
-// Returns local relative path: "/uploads/videos/video-1-....mp4"
 // ================================================================
 async function downloadVideoToLocal(remoteUrl, videoId) {
   if (!remoteUrl) throw new Error("remoteUrl is required");
@@ -89,14 +87,16 @@ exports.generateVideo = async (req, res) => {
       guestLine,
       tone = "professional",
       music = "subtle",
-      format = "16:9",
+      format = "landscape",
       templateId,
       templateTitle,
       templateCategory,
       coverImage,
     } = req.body;
 
-    // 🎯 Use the user-selected image
+    console.log("📥 Incoming format from frontend:", format);
+
+    // Use the user's selected image
     const rawImageUrl = incomingImageUrl || coverImage || "";
 
     if (!rawImageUrl) {
@@ -106,9 +106,7 @@ exports.generateVideo = async (req, res) => {
       });
     }
 
-    // Convert relative → absolute (Replicate needs a public URL)
     const imageUrl = buildAbsoluteUrl(rawImageUrl);
-
     console.log("🖼️ Using user image:", imageUrl);
 
     if (!hostLine || !guestLine) {
@@ -123,7 +121,7 @@ exports.generateVideo = async (req, res) => {
       templateId: templateId || null,
       title: templateTitle || "Untitled Podcast",
       category: templateCategory || "",
-      coverImage: imageUrl, // save the actual image URL used
+      coverImage: imageUrl,
       hostLine,
       guestLine,
       tone,
@@ -133,7 +131,7 @@ exports.generateVideo = async (req, res) => {
       progress: 0,
     });
 
-    // ---- Kick off async pipeline (don't await) ----
+    // ---- Kick off async pipeline ----
     processVideo(videoDoc._id, imageUrl).catch((err) =>
       console.error("processVideo async error:", err)
     );
@@ -185,6 +183,7 @@ Write the image-to-video prompt.`,
     });
 
     console.log("✅ Video prompt:", videoPrompt);
+    console.log("🎬 Passing to ai.video → format:", doc.format);
 
     // ---- Step 2: Video generation ----
     const remoteVideoUrl = await ai.video({
