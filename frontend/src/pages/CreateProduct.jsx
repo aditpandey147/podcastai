@@ -63,10 +63,10 @@ export default function CreateProduct() {
 
   // ---- Core form ----
   const [hostLine, setHostLine] = useState(
-    dialog?.host || "Welcome to the show..."
+    dialog?.host || "Welcome to the show...",
   );
   const [guestLine, setGuestLine] = useState(
-    dialog?.guest || "What really happened that night?"
+    dialog?.guest || "What really happened that night?",
   );
   const [format, setFormat] = useState("16:9");
 
@@ -123,7 +123,7 @@ export default function CreateProduct() {
     } catch (err) {
       console.error("Enhance failed:", err);
       toast.error(
-        err.response?.data?.message || "Failed to enhance. Try again."
+        err.response?.data?.message || "Failed to enhance. Try again.",
       );
     } finally {
       setLoading(false);
@@ -150,6 +150,10 @@ export default function CreateProduct() {
 
       const imageUrl = getImageUrl(coverImage);
 
+      // 👇 Convert UI value ("16:9" | "9:16") → backend value ("landscape" | "portrait")
+      const backendFormat = format === "9:16" ? "portrait" : "landscape";
+      console.log("🎬 Sending format:", backendFormat);
+
       // Fire the request
       const res = await api.post("/video/generate", {
         imageUrl,
@@ -157,7 +161,7 @@ export default function CreateProduct() {
         guestLine: guestLine.trim(),
         tone,
         music,
-        format,
+        format: backendFormat, // 👈 only this line changed
         templateId,
         templateTitle,
         templateCategory,
@@ -180,7 +184,7 @@ export default function CreateProduct() {
     } catch (err) {
       console.error("Generate failed:", err);
       toast.error(
-        err.response?.data?.message || "Failed to generate. Try again."
+        err.response?.data?.message || "Failed to generate. Try again.",
       );
       setShowLoader(false);
       setGenerating(false);
@@ -573,8 +577,7 @@ export default function CreateProduct() {
                       disabled={enhancingHost}
                       className="h-[30px] px-3 rounded-[8px] flex items-center gap-1.5 text-[11px] font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
                       style={{
-                        background:
-                          "linear-gradient(100deg, #6e35ed, #3483ff)",
+                        background: "linear-gradient(100deg, #6e35ed, #3483ff)",
                         boxShadow: "0 4px 12px rgba(58,90,255,.28)",
                       }}
                       aria-label="AI enhance host line"
@@ -642,8 +645,7 @@ export default function CreateProduct() {
                       disabled={enhancingGuest}
                       className="h-[30px] px-3 rounded-[8px] flex items-center gap-1.5 text-[11px] font-medium text-white transition-all duration-200 hover:brightness-110 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed"
                       style={{
-                        background:
-                          "linear-gradient(100deg, #6e35ed, #3483ff)",
+                        background: "linear-gradient(100deg, #6e35ed, #3483ff)",
                         boxShadow: "0 4px 12px rgba(58,90,255,.28)",
                       }}
                       aria-label="AI enhance guest line"
