@@ -312,7 +312,7 @@ export default function CreateProduct() {
                 >
                   {/* Preview scene */}
                   <div
-                    className="relative h-[220px] md:h-[260px] overflow-hidden"
+                    className="relative h-[350px] md:h-[450px] overflow-hidden"
                     style={{
                       background:
                         "linear-gradient(180deg, #07111b, #071521 47%, #02070c)",
