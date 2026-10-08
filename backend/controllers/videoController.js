@@ -36,8 +36,7 @@ function buildAbsoluteUrl(input) {
   if (/^https?:\/\//i.test(input)) return input;
 
   const SERVER_URL =
-    process.env.SERVER_URL ||
-    process.env.BACKEND_URL ||
+    process.env.FRONTEND_URL ||
     `http://localhost:${process.env.PORT || 5000}`;
 
   const cleanPath = input.startsWith("/") ? input : `/${input}`;
