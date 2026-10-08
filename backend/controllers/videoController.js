@@ -6,14 +6,6 @@ const Video = require("../models/Video");
 const ai = require("../services/aiService");
 
 // ================================================================
-// 🎬 DEMO MODE
-// true  → skip Replicate, use the fixed demo video
-// false → real generation via Replicate
-// ================================================================
-const DEMO_MODE = true;
-const DEMO_VIDEO_PATH = "/public/demo/demo-video.mp4";
-
-// ================================================================
 // 📁 VIDEOS DIRECTORY
 // ================================================================
 const VIDEOS_DIR = path.join(__dirname, "..", "uploads", "videos");
@@ -36,7 +28,9 @@ function buildAbsoluteUrl(input) {
   if (/^https?:\/\//i.test(input)) return input;
 
   const SERVER_URL =
-    process.env.FRONTEND_URL;
+    process.env.SERVER_URL ||
+    process.env.BACKEND_URL ||
+    `http://localhost:${process.env.PORT || 5000}`;
 
   const cleanPath = input.startsWith("/") ? input : `/${input}`;
   return `${SERVER_URL}${cleanPath}`;
@@ -73,59 +67,6 @@ async function downloadVideoToLocal(remoteUrl, videoId) {
 }
 
 // ================================================================
-// 🎬 DEMO PIPELINE — fake progress, output your uploaded video
-// ================================================================
-async function simulateDemoPipeline(videoMongoId) {
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-  const SERVER_URL =
-    process.env.SERVER_URL ||
-    process.env.BACKEND_URL ||
-    `http://localhost:${process.env.PORT || 5000}`;
-
-  const demoVideoAbsoluteUrl = `${SERVER_URL}${DEMO_VIDEO_PATH}`;
-
-  try {
-    // ---- 15% ----
-    await Video.findByIdAndUpdate(videoMongoId, {
-      status: "processing",
-      progress: 15,
-    });
-    console.log(`🎬 [DEMO] Video ${videoMongoId} → 15%`);
-    await sleep(2000);
-
-    // ---- 45% ----
-    await Video.findByIdAndUpdate(videoMongoId, { progress: 45 });
-    console.log(`🎬 [DEMO] Video ${videoMongoId} → 45%`);
-    await sleep(2500);
-
-    // ---- 75% ----
-    await Video.findByIdAndUpdate(videoMongoId, { progress: 75 });
-    console.log(`🎬 [DEMO] Video ${videoMongoId} → 75%`);
-    await sleep(2000);
-
-    // ---- 100% — point to the demo video ----
-    await Video.findByIdAndUpdate(videoMongoId, {
-      videoUrl: demoVideoAbsoluteUrl,
-      localVideoUrl: demoVideoAbsoluteUrl,
-      videoPrompt: "[DEMO MODE] Using fixed demo video",
-      status: "completed",
-      progress: 100,
-    });
-
-    console.log(
-      `✅ [DEMO] Video ${videoMongoId} → 100% using ${demoVideoAbsoluteUrl}`
-    );
-  } catch (err) {
-    console.error("❌ [DEMO] Pipeline error:", err.message);
-    await Video.findByIdAndUpdate(videoMongoId, {
-      status: "failed",
-      errorMessage: err.message,
-    });
-  }
-}
-
-// ================================================================
 // POST /api/video/generate
 // ================================================================
 exports.generateVideo = async (req, res) => {
@@ -154,9 +95,8 @@ exports.generateVideo = async (req, res) => {
     } = req.body;
 
     console.log("📥 Incoming format from frontend:", format);
-    console.log("🎬 DEMO MODE:", DEMO_MODE);
 
-    // Use the user's selected image (falls back to coverImage)
+    // Use the user's selected image
     const rawImageUrl = incomingImageUrl || coverImage || "";
 
     if (!rawImageUrl) {
@@ -191,16 +131,10 @@ exports.generateVideo = async (req, res) => {
       progress: 0,
     });
 
-    // ---- Kick off pipeline (don't await) ----
-    if (DEMO_MODE) {
-      simulateDemoPipeline(videoDoc._id).catch((err) =>
-        console.error("simulateDemoPipeline async error:", err)
-      );
-    } else {
-      processVideo(videoDoc._id, imageUrl).catch((err) =>
-        console.error("processVideo async error:", err)
-      );
-    }
+    // ---- Kick off async pipeline ----
+    processVideo(videoDoc._id, imageUrl).catch((err) =>
+      console.error("processVideo async error:", err)
+    );
 
     res.json({
       success: true,
@@ -214,12 +148,13 @@ exports.generateVideo = async (req, res) => {
 };
 
 // ================================================================
-// REAL PIPELINE (kept for when DEMO_MODE = false)
+// ASYNC PIPELINE
 // ================================================================
 async function processVideo(videoMongoId, imageUrl) {
   let localVideoPath = null;
 
   try {
+    // ---- Step 1: Vision → prompt ----
     await Video.findByIdAndUpdate(videoMongoId, {
       status: "processing",
       progress: 15,
@@ -250,6 +185,7 @@ Write the image-to-video prompt.`,
     console.log("✅ Video prompt:", videoPrompt);
     console.log("🎬 Passing to ai.video → format:", doc.format);
 
+    // ---- Step 2: Video generation ----
     const remoteVideoUrl = await ai.video({
       imageUrl,
       prompt: videoPrompt,
@@ -258,8 +194,10 @@ Write the image-to-video prompt.`,
 
     console.log("🎥 Replicate URL:", remoteVideoUrl);
 
+    // ---- Step 3: Download to local ----
     localVideoPath = await downloadVideoToLocal(remoteVideoUrl, doc.id);
 
+    // ---- Step 4: Save both paths in DB ----
     await Video.findByIdAndUpdate(videoMongoId, {
       videoUrl: remoteVideoUrl,
       localVideoUrl: localVideoPath,
