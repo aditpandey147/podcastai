@@ -10,6 +10,7 @@ import {
   Download,
   RefreshCw,
   Film,
+  Search,
   X,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
@@ -82,6 +83,7 @@ function StatusBadge({ status }) {
 function VideoModal({ video, onClose }) {
   const modalRef = useRef(null);
 
+  // Close on ESC key
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === "Escape") onClose();
@@ -90,6 +92,7 @@ function VideoModal({ video, onClose }) {
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
+  // Lock body scroll while modal is open
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -120,8 +123,7 @@ function VideoModal({ video, onClose }) {
         style={{
           background: "linear-gradient(180deg, #06162b, #041124)",
           border: "1px solid rgba(150,120,255,.35)",
-          boxShadow:
-            "0 24px 90px rgba(0,0,0,.7), 0 0 40px rgba(141,67,255,.15)",
+          boxShadow: "0 24px 90px rgba(0,0,0,.7), 0 0 40px rgba(141,67,255,.15)",
         }}
       >
         {/* Header */}
@@ -162,12 +164,10 @@ function VideoModal({ video, onClose }) {
         {/* Video */}
         <div className="aspect-video bg-[#020713]">
           <video
-            key={playableUrl}
             src={getImageUrl(playableUrl)}
             poster={getImageUrl(video.coverImage)}
             controls
             autoPlay
-            playsInline
             className="w-full h-full object-contain bg-black"
           />
         </div>
@@ -226,14 +226,14 @@ export default function MyPodcasts() {
     fetchVideos();
   }, [fetchVideos]);
 
-  // ---- Poll every 2s if any video is still processing/queued ----
+  // ---- Poll every 5s if any video is still processing/queued ----
   useEffect(() => {
     const hasPending = videos.some(
       (v) => v.status === "queued" || v.status === "processing"
     );
     if (!hasPending) return;
 
-    const interval = setInterval(fetchVideos, 2000);
+    const interval = setInterval(fetchVideos, 5000);
     return () => clearInterval(interval);
   }, [videos, fetchVideos]);
 
@@ -337,30 +337,16 @@ export default function MyPodcasts() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={fetchVideos}
-                  className="h-[40px] px-3 rounded-[10px] text-[12px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952] flex items-center gap-2"
-                  style={{
-                    border: "1px solid #1d568e",
-                    background: "#061b37",
-                  }}
-                >
-                  <RefreshCw size={13} />
-                  Refresh
-                </button>
-
-                <button
-                  onClick={() => navigate("/create-podcast")}
-                  className="h-[40px] px-4 rounded-[10px] text-[12px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110"
-                  style={{
-                    background: "linear-gradient(100deg, #6e35ed, #3483ff)",
-                    boxShadow: "0 6px 20px rgba(58,90,255,.3)",
-                  }}
-                >
-                  + Create New
-                </button>
-              </div>
+              <button
+                onClick={() => navigate("/create-podcast")}
+                className="h-[40px] px-4 rounded-[10px] text-[12px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110"
+                style={{
+                  background: "linear-gradient(100deg, #6e35ed, #3483ff)",
+                  boxShadow: "0 6px 20px rgba(58,90,255,.3)",
+                }}
+              >
+                + Create New
+              </button>
             </div>
 
             {/* LOADING / EMPTY / GRID */}
@@ -418,7 +404,7 @@ export default function MyPodcasts() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {videos.map((v) => (
                   <VideoCard
-                    key={v._id || v.id}
+                    key={v.id}
                     video={v}
                     onRefresh={fetchVideos}
                     onPlay={() => setActiveVideo(v)}
@@ -432,7 +418,10 @@ export default function MyPodcasts() {
 
       {/* MODAL */}
       {activeVideo && (
-        <VideoModal video={activeVideo} onClose={() => setActiveVideo(null)} />
+        <VideoModal
+          video={activeVideo}
+          onClose={() => setActiveVideo(null)}
+        />
       )}
     </div>
   );
@@ -446,7 +435,6 @@ function VideoCard({ video, onRefresh, onPlay }) {
     video.status === "queued" || video.status === "processing";
   const isCompleted = video.status === "completed";
   const isFailed = video.status === "failed";
-  const isDone = isCompleted && (video.progress || 0) >= 100;
 
   const playableUrl = video.localVideoUrl || video.videoUrl;
 
@@ -465,7 +453,7 @@ function VideoCard({ video, onRefresh, onPlay }) {
       }}
     >
       <div className="relative aspect-video bg-[#020713] overflow-hidden">
-        {isDone && playableUrl ? (
+        {isCompleted && playableUrl ? (
           <>
             {/* Poster / thumbnail */}
             <img
@@ -505,24 +493,13 @@ function VideoCard({ video, onRefresh, onPlay }) {
                   WebkitBackdropFilter: "blur(6px)",
                 }}
               >
-                <Play size={22} fill="white" className="text-white ml-[2px]" />
+                <Play
+                  size={22}
+                  fill="white"
+                  className="text-white ml-[2px]"
+                />
               </span>
             </button>
-
-            {/* 100% PROGRESS BADGE */}
-            <div
-              className="absolute bottom-2.5 right-2.5 z-20 flex items-center gap-1.5 px-2.5 py-[4px] rounded-full text-[10px] font-semibold"
-              style={{
-                background: "rgba(12,228,189,.15)",
-                border: "1px solid rgba(12,228,189,.4)",
-                color: "#0ce4bd",
-                backdropFilter: "blur(6px)",
-                WebkitBackdropFilter: "blur(6px)",
-              }}
-            >
-              <CheckCircle2 size={11} />
-              100%
-            </div>
           </>
         ) : isProcessing ? (
           <div className="absolute inset-0 grid place-items-center">
@@ -607,7 +584,7 @@ function VideoCard({ video, onRefresh, onPlay }) {
             {new Date(video.createdAt).toLocaleDateString()}
           </span>
 
-          {isDone && (
+          {isCompleted && (
             <a
               href={getImageUrl(playableUrl)}
               target="_blank"
