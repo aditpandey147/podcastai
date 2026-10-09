@@ -55,7 +55,7 @@ export default function UpgradeRequired() {
                 Go Back
               </button>
               <button
-                onClick={() => navigate('/upgrades')}
+                onClick={() => navigate('https://www.podcastai.live/upgrades')}
                 className="flex-1 h-[44px] rounded-[10px] text-[13px] font-semibold text-white flex items-center justify-center gap-2 transition hover:brightness-110"
                 style={{
                   background: 'linear-gradient(100deg, #6e35ed, #3483ff)',
