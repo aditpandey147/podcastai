@@ -64,7 +64,7 @@ function WaveLogo() {
 
 const Sidebar = () => {
   const { logout, user, isAdmin } = useAuth();
-  const { has } = useFeatures();   // 👈 NEW — feature flags
+  const { has, all} = useFeatures();   // 👈 NEW — feature flags
   const navigate = useNavigate();
   const [planName, setPlanName] = useState(user?.planName || "Free");
   const [planLoading, setPlanLoading] = useState(false);
@@ -96,6 +96,16 @@ const Sidebar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMobileOpen]);
+
+  console.log("🔍 user.planId:", user?.planId);
+  console.log("🔍 user.features:", all);
+  console.log("🔍 has(podcastCreatorPro):", has("podcastCreatorPro"));
+  console.log("🔍 has(viralShortsAI):", has("viralShortsAI"));
+  console.log("🔍 has(growthStudio):", has("growthStudio"));
+  console.log("🔍 has(brandingSuite):", has("brandingSuite"));
+  console.log("🔍 user.role:", user?.role);
+  console.log("🔍 user.features:", JSON.stringify(all, null, 2));
+  console.log("🔍 user.features:", all);
 
   useEffect(() => {
     if (isMobileOpen) {
@@ -210,7 +220,7 @@ const Sidebar = () => {
     { path: "/ai-ranker",
       label: "AI Ranker", 
       icon: BarChart3, 
-      show: has("aiRanker") },
+      show: has("ranker") },
     {
       path: "/agency",
       label: "Agency",
@@ -239,7 +249,7 @@ const Sidebar = () => {
       show: true,
       target: "_blank",
       external: true,
-      href: "https://www.aidigitalproduct.live/upgrades",
+      href: "https://www.podcastai.live/upgrades",
     },
     {
       path: "/support",
