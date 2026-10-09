@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import bannerBg from "../assets/images/banner-bg.png";
-import { Plus, LayoutGrid, Sparkles, Images } from "lucide-react";
+import { Plus, LayoutGrid, Sparkles, Images, Rocket } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import api from "../services/api";
@@ -20,9 +20,21 @@ const getImageUrl = (path) => {
 // STATIC DATA
 // ================================================================
 const quickActions = [
-  { title: "Create New Podcast", sub: "Start from scratch with AI", icon: Plus },
-  { title: "Browse Templates", sub: "Explore 50+ podcast templates", icon: LayoutGrid },
-  { title: "Create AI Shorts", sub: "Turn podcasts into viral shorts", icon: Sparkles },
+  {
+    title: "Create New Podcast",
+    sub: "Start from scratch with AI",
+    icon: Plus,
+  },
+  {
+    title: "Browse Templates",
+    sub: "Explore 50+ podcast templates",
+    icon: LayoutGrid,
+  },
+  {
+    title: "Create AI Shorts",
+    sub: "Turn podcasts into viral shorts",
+    icon: Sparkles,
+  },
   { title: "Brand Kit", sub: "Customize your brand style", icon: Images },
 ];
 
@@ -96,9 +108,11 @@ function AnimatedLineChart({ title, height = 220 }) {
     <div
       className="rounded-[12px] p-4 transition-all duration-300 hover:-translate-y-[2px]"
       style={{
-        background: "linear-gradient(180deg, rgba(4,26,53,.55), rgba(3,17,38,.75))",
+        background:
+          "linear-gradient(180deg, rgba(4,26,53,.55), rgba(3,17,38,.75))",
         border: "1px solid rgba(80,150,255,.25)",
-        boxShadow: "0 8px 24px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.05) inset",
+        boxShadow:
+          "0 8px 24px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.05) inset",
       }}
     >
       {/* Header */}
@@ -253,7 +267,10 @@ function AnimatedLineChart({ title, height = 220 }) {
       </div>
 
       {/* Footer stats */}
-      <div className="flex items-center justify-between mt-2 pt-2" style={{ borderTop: "1px solid rgba(80,150,255,.1)" }}>
+      <div
+        className="flex items-center justify-between mt-2 pt-2"
+        style={{ borderTop: "1px solid rgba(80,150,255,.1)" }}
+      >
         <span className="text-[10px] text-[#7d8fa8]">Last 7 days</span>
         <span className="text-[10.5px] font-semibold text-[#4ef0ae]">
           ↗ +34% this week
@@ -308,9 +325,11 @@ function AnimatedDonut({ data, size = 200, thickness = 24, title }) {
     <div
       className="rounded-[12px] p-4 transition-all duration-300 hover:-translate-y-[2px]"
       style={{
-        background: "linear-gradient(180deg, rgba(4,26,53,.55), rgba(3,17,38,.75))",
+        background:
+          "linear-gradient(180deg, rgba(4,26,53,.55), rgba(3,17,38,.75))",
         border: "1px solid rgba(80,150,255,.25)",
-        boxShadow: "0 8px 24px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.05) inset",
+        boxShadow:
+          "0 8px 24px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.05) inset",
       }}
     >
       <div className="flex items-center justify-between mb-3">
@@ -329,7 +348,10 @@ function AnimatedDonut({ data, size = 200, thickness = 24, title }) {
 
       <div className="flex items-center gap-5 flex-wrap sm:flex-nowrap">
         {/* Donut */}
-        <div className="relative shrink-0" style={{ width: size, height: size }}>
+        <div
+          className="relative shrink-0"
+          style={{ width: size, height: size }}
+        >
           <svg width={size} height={size} className="transform -rotate-90">
             <circle
               cx={cx}
@@ -369,17 +391,27 @@ function AnimatedDonut({ data, size = 200, thickness = 24, title }) {
           <div className="absolute inset-0 grid place-items-center pointer-events-none">
             {hovered !== null ? (
               <div className="text-center">
-                <div className="text-[11px] font-semibold" style={{ color: data[hovered].color }}>
+                <div
+                  className="text-[11px] font-semibold"
+                  style={{ color: data[hovered].color }}
+                >
                   {data[hovered].name}
                 </div>
-                <div className="text-[24px] font-bold leading-tight" style={{ color: "#eaf1ff" }}>
+                <div
+                  className="text-[24px] font-bold leading-tight"
+                  style={{ color: "#eaf1ff" }}
+                >
                   {Math.round(animatedValues[hovered])}%
                 </div>
               </div>
             ) : (
               <div className="text-center">
-                <div className="text-[10px] uppercase tracking-[0.5px] text-[#7d8fa8]">Total</div>
-                <div className="text-[24px] font-bold text-[#eaf1ff] leading-tight">100%</div>
+                <div className="text-[10px] uppercase tracking-[0.5px] text-[#7d8fa8]">
+                  Total
+                </div>
+                <div className="text-[24px] font-bold text-[#eaf1ff] leading-tight">
+                  100%
+                </div>
                 <div className="text-[9px] text-[#7d8fa8] mt-0.5">
                   {data.length} platforms
                 </div>
@@ -397,7 +429,8 @@ function AnimatedDonut({ data, size = 200, thickness = 24, title }) {
               onMouseLeave={() => setHovered(null)}
               className="flex items-center gap-2.5 px-2 py-1 rounded-md cursor-pointer transition-colors"
               style={{
-                background: hovered === i ? "rgba(110,53,237,.12)" : "transparent",
+                background:
+                  hovered === i ? "rgba(110,53,237,.12)" : "transparent",
               }}
             >
               <span
@@ -453,12 +486,19 @@ function TrendingCategories() {
     return (
       <section>
         <div className="flex justify-between items-center mb-[15px] h-[24px]">
-          <h2 className="text-[18px] font-bold text-[#edf4ff]">Trending Categories</h2>
-          <span className="text-[13px] text-[#91a9c8] cursor-pointer">View all →</span>
+          <h2 className="text-[18px] font-bold text-[#edf4ff]">
+            Trending Categories
+          </h2>
+          <span className="text-[13px] text-[#91a9c8] cursor-pointer">
+            View all →
+          </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[12px]">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-[160px] rounded-[9px] bg-[#0a1b36] animate-pulse" />
+            <div
+              key={i}
+              className="h-[160px] rounded-[9px] bg-[#0a1b36] animate-pulse"
+            />
           ))}
         </div>
       </section>
@@ -469,8 +509,12 @@ function TrendingCategories() {
     return (
       <section>
         <div className="flex justify-between items-center mb-[15px] h-[24px]">
-          <h2 className="text-[18px] font-bold text-[#edf4ff]">Trending Categories</h2>
-          <span className="text-[13px] text-[#91a9c8] cursor-pointer">View all →</span>
+          <h2 className="text-[18px] font-bold text-[#edf4ff]">
+            Trending Categories
+          </h2>
+          <span className="text-[13px] text-[#91a9c8] cursor-pointer">
+            View all →
+          </span>
         </div>
         <div className="border border-[#17385f] rounded-[10px] bg-gradient-to-b from-[#06162b] to-[#041124] p-8 text-center">
           <p className="text-[13px] text-[#8198b6]">No categories yet.</p>
@@ -482,7 +526,9 @@ function TrendingCategories() {
   return (
     <section>
       <div className="flex justify-between items-center mb-[15px] h-[24px]">
-        <h2 className="text-[18px] font-bold text-[#edf4ff]">Trending Categories</h2>
+        <h2 className="text-[18px] font-bold text-[#edf4ff]">
+          Trending Categories
+        </h2>
         <span className="text-[13px] text-[#91a9c8] cursor-pointer hover:text-[#edf4ff] transition-colors">
           View all →
         </span>
@@ -492,7 +538,11 @@ function TrendingCategories() {
         {categories.map((cat) => (
           <button
             key={cat.id}
-            onClick={() => navigate(`/category/${cat.slug}`)}
+            onClick={() =>
+              navigate("/templates", {
+                state: { categoryId: cat.id, categorySlug: cat.slug },
+              })
+            }
             className="group border border-[#173d6d] rounded-[9px] overflow-hidden bg-[#061427] flex flex-col text-left transition-all duration-200 hover:border-[#6b38ed] hover:-translate-y-[2px] hover:shadow-lg"
           >
             <div className="relative h-[170px]  shrink-0 bg-[#0a1b36] overflow-hidden">
@@ -507,7 +557,9 @@ function TrendingCategories() {
                   }}
                 />
               ) : (
-                <div className="w-full h-full grid place-items-center text-[28px] opacity-60">📁</div>
+                <div className="w-full h-full grid place-items-center text-[28px] opacity-60">
+                  📁
+                </div>
               )}
             </div>
             <div className="p-[11px] flex flex-col flex-1">
@@ -623,7 +675,10 @@ export default function Dashboard() {
 
               {/* 👇 NEW — one line chart + one donut chart */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <AnimatedLineChart title="Podcast Plays — Last 7 Days" height={230} />
+                <AnimatedLineChart
+                  title="Podcast Plays — Last 7 Days"
+                  height={230}
+                />
                 <AnimatedDonut
                   data={PLATFORM_DATA}
                   title="Trending Podcasts — Platform Split"
@@ -635,7 +690,10 @@ export default function Dashboard() {
             {/* RIGHT COLUMN */}
             <aside className="min-w-0 flex flex-col gap-4">
               <div>
-                <div className="hidden lg:block mb-[15px] h-[24px]" aria-hidden="true" />
+                <div
+                  className="hidden lg:block mb-[15px] h-[24px]"
+                  aria-hidden="true"
+                />
                 <div className="border border-[#17385f] rounded-[10px] bg-gradient-to-b from-[#06162b] to-[#041124] p-[13px]">
                   <h3 className="text-[16px] font-bold text-[#edf4ff] mb-[13px]">
                     Quick Actions
@@ -647,7 +705,8 @@ export default function Dashboard() {
                         key={idx}
                         className="h-[62px] rounded-[9px] bg-[#0a1b36] mb-[8px] last:mb-0 flex items-center gap-[10px] px-[10px] cursor-pointer hover:bg-[#0c2043] transition-colors"
                         onClick={() =>
-                          a.title === "Create New Podcast" && navigate("/create-product")
+                          a.title === "Create New Podcast" &&
+                          navigate("/create-product")
                         }
                       >
                         <div
@@ -675,13 +734,16 @@ export default function Dashboard() {
               </div>
 
               <div className="border border-[#17385f] rounded-[10px] bg-gradient-to-b from-[#06162b] to-[#041124] p-[16px]">
-                <div className="text-[13px] text-[#edf4ff]">AI Shorts Performance</div>
+                <div className="text-[13px] text-[#edf4ff]">
+                  AI Shorts Performance
+                </div>
                 <div className="flex items-center gap-[25px] h-[125px] mt-3">
                   <div className="relative w-[105px] h-[105px] rounded-full grid place-items-center shrink-0">
                     <div
                       className="absolute inset-0 rounded-full"
                       style={{
-                        background: "conic-gradient(#7d3cff 0 28%, #2868ff 28%)",
+                        background:
+                          "conic-gradient(#7d3cff 0 28%, #2868ff 28%)",
                       }}
                     />
                     <div
@@ -702,7 +764,9 @@ export default function Dashboard() {
                       >
                         <b className={s.color}>{s.icon}</b>
                         <span>{s.name}</span>
-                        <span className="text-right text-[#c9d5e8]">{s.count}</span>
+                        <span className="text-right text-[#c9d5e8]">
+                          {s.count}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -720,18 +784,18 @@ export default function Dashboard() {
             }}
           >
             <div
-              className="w-[40px] h-[40px] rounded-full grid place-items-center text-[22px] shrink-0"
+              className="w-[40px] h-[40px] rounded-full grid place-items-center shrink-0"
               style={{ background: "#27165e", color: "#b977ff" }}
             >
-              ✦
+              <Rocket size={20} />
             </div>
             <div className="min-w-0">
               <div className="text-[17px] font-semibold text-[#edf4ff]">
-                Create More. Reach Further.
+                You&apos;re Creating. Now Scale.
               </div>
               <div className="text-[12px] text-[#94a3b8] mt-1">
-                Upgrade to Pro and unlock unlimited podcasts, AI shorts, premium
-                templates and more.
+                Power users publish 10× more with unlimited runs, viral shorts,
+                growth tools and branded templates.
               </div>
             </div>
             <button
@@ -741,7 +805,7 @@ export default function Dashboard() {
                 background: "linear-gradient(100deg, #7735ee, #2f78ff)",
               }}
             >
-              Upgrade to Pro →
+              Scale My Studio →
             </button>
           </section>
         </main>
