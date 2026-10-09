@@ -171,7 +171,7 @@ Return ONLY the JSON array.`;
 
 // ================================================================
 // GET /api/ai/trending-stream  (SSE)
-// Returns 12 podcasts + streams each image one at a time (10s gap)
+// Text-only — uses ai.chat(). No images. Streams 12 podcasts then done.
 // ================================================================
 exports.generateTrendingStream = async (req, res) => {
   console.log("🔴 SSE hit — topic:", req.query.topic);
@@ -200,12 +200,6 @@ exports.generateTrendingStream = async (req, res) => {
     return res.end();
   }
 
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) {
-    send("error", { message: "DEEPSEEK_API_KEY not configured" });
-    return res.end();
-  }
-
   const ping = setInterval(() => {
     try {
       res.write(`: ping\n\n`);
@@ -220,7 +214,6 @@ exports.generateTrendingStream = async (req, res) => {
   });
 
   try {
-    // ---- STEP 1: DeepSeek → 12 podcasts ----
     const systemPrompt = `You are a podcast industry analyst with real-time knowledge of trending podcasts.
 
 Task: Given a TOPIC, return the TOP 12 podcasts currently trending across YouTube, Spotify, Apple Podcasts, Amazon Music, and Google Podcasts.
@@ -228,47 +221,41 @@ Task: Given a TOPIC, return the TOP 12 podcasts currently trending across YouTub
 CRITICAL RULES:
 - Respond with ONLY a valid JSON array — no intro, no markdown, no code fences.
 - Return exactly 12 podcast objects.
-- Each object must have keys: rank, title, host, category, platform, listeners, rating, imagePrompt.
+- Each object must have keys: rank, title, host, category, platform, listeners, rating, growth, description, tags.
 - "platform" MUST be one of: "YouTube", "Spotify", "Apple Podcasts", "Amazon Music", "Google Podcasts".
 - "listeners" format: "12.4M", "890K" etc.
 - "rating": number like 4.8.
-- "imagePrompt": 30-50 words describing podcast cover art (mood, colors, lighting, style). NO text in the image.
+- "growth": weekly growth percentage like "+12%" or "+4.5%".
+- "description": 20-35 words describing what the podcast is about. Punchy, no fluff.
+- "tags": array of 3-4 short keyword strings.
 - Rank 1 = most trending.
 
 Format:
-[{"rank":1,"title":"...","host":"...","category":"...","platform":"YouTube","listeners":"12.4M","rating":4.8,"imagePrompt":"..."}, ...]`;
+[{"rank":1,"title":"...","host":"...","category":"...","platform":"YouTube","listeners":"12.4M","rating":4.8,"growth":"+12%","description":"...","tags":["tag1","tag2","tag3"]}, ...]`;
 
-    const aiRes = await axios.post(
-      "https://api.deepseek.com/v1/chat/completions",
-      {
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Topic: ${topic}\n\nReturn the TOP 12 trending podcasts with detailed cover art prompts.\nReturn ONLY the JSON array.`,
-          },
-        ],
-        temperature: 0.85,
-        max_tokens: 3000,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 60000,
-      }
-    );
+    const userPrompt = `Topic: ${topic}
 
-    let raw = aiRes.data?.choices?.[0]?.message?.content?.trim() || "";
-    raw = raw.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+Return the TOP 12 trending podcasts.
+Return ONLY the JSON array.`;
 
-    const start = raw.indexOf("[");
-    const end = raw.lastIndexOf("]");
+    // 👇 use ai.chat() from your aiService
+    const raw = await ai.chat({
+      userMessage: userPrompt,
+      systemPrompt,
+      temperature: 0.85,
+      maxTokens: 3000,
+    });
+
+    const cleaned = String(raw || "")
+      .replace(/^```(?:json)?/i, "")
+      .replace(/```$/, "")
+      .trim();
+
+    const start = cleaned.indexOf("[");
+    const end = cleaned.lastIndexOf("]");
     if (start === -1 || end === -1) throw new Error("AI did not return JSON");
 
-    const parsed = JSON.parse(raw.slice(start, end + 1));
+    const parsed = JSON.parse(cleaned.slice(start, end + 1));
 
     const allowedPlatforms = [
       "YouTube",
@@ -288,87 +275,17 @@ Format:
         : "YouTube",
       listeners: String(item.listeners || "1.0M").trim(),
       rating: Number(item.rating) || 4.5,
-      imagePrompt: String(
-        item.imagePrompt || `podcast cover art about ${topic}`
-      ).trim(),
+      growth: String(item.growth || "+0%").trim(),
+      description: String(item.description || "").trim(),
+      tags: Array.isArray(item.tags)
+        ? item.tags.slice(0, 4).map((t) => String(t).trim())
+        : [],
     }));
 
-    console.log(`✅ Sending ${podcasts.length} podcasts`);
+    console.log(`✅ Sending ${podcasts.length} podcasts (no images)`);
 
-    // ---- STEP 2: Send all 12 immediately (no images) ----
-    send("podcasts", {
-      topic,
-      podcasts: podcasts.map((p) => ({ ...p, imageUrl: null })),
-    });
+    send("podcasts", { topic, podcasts });
 
-    // ---- STEP 3: Generate images SEQUENTIALLY (10s gap + retry on 429) ----
-    if (ai.image) {
-      console.log(`🎨 Generating ${podcasts.length} images sequentially...`);
-
-      const DELAY_MS = 10000; // 10s between images
-      const MAX_RETRIES = 3;  // retries if 429
-      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-      for (let i = 0; i < podcasts.length; i++) {
-        const p = podcasts[i];
-
-        const fullPrompt = `${p.imagePrompt}, podcast cover art, cinematic lighting, high contrast, moody atmosphere, editorial illustration, no text, no watermark, no letters, no words`;
-
-        let attempt = 0;
-        let imageUrl = null;
-        let lastError = null;
-
-        while (attempt < MAX_RETRIES && !imageUrl) {
-          attempt++;
-          try {
-            imageUrl = await ai.image({
-              prompt: fullPrompt,
-              aspectRatio: "square",
-            });
-            console.log(`  ✅ Image ${i + 1}/${podcasts.length} done`);
-            send("image", { rank: p.rank, imageUrl });
-          } catch (imgErr) {
-            lastError = imgErr;
-            const is429 =
-              imgErr?.response?.status === 429 ||
-              /429|Too Many Requests|throttled/i.test(imgErr.message || "");
-
-            if (is429 && attempt < MAX_RETRIES) {
-              const wait = 8000 * attempt; // 8s, 16s, ...
-              console.log(
-                `  ⏳ Image ${i + 1} throttled — retry ${attempt}/${MAX_RETRIES - 1} in ${wait / 1000}s`
-              );
-              await sleep(wait);
-            } else {
-              console.error(
-                `  ❌ Image ${i + 1}/${podcasts.length} failed:`,
-                imgErr.message
-              );
-              break;
-            }
-          }
-        }
-
-        if (!imageUrl) {
-          send("image-error", {
-            rank: p.rank,
-            message: lastError?.message || "Image generation failed",
-          });
-        }
-
-        // Wait 10s before next image (skip after last one)
-        if (i < podcasts.length - 1) {
-          console.log(`  💤 Waiting ${DELAY_MS / 1000}s before next image...`);
-          await sleep(DELAY_MS);
-        }
-      }
-
-      console.log("🎨 All images processed");
-    } else {
-      console.log("⚠️ ai.image not available — skipping image generation");
-    }
-
-    // ---- STEP 4: Done ----
     send("done", { topic });
     clearInterval(ping);
     res.end();
@@ -392,8 +309,9 @@ Format:
       ][i % 5],
       listeners: `${12 - i}.${4 - (i % 3)}M`,
       rating: 4.8 - (i % 3) * 0.1,
-      imagePrompt: `podcast cover art about ${topic}`,
-      imageUrl: null,
+      growth: `+${12 - i}%`,
+      description: `A trending podcast about ${topic}, hosted by industry experts.`,
+      tags: [topic.split(" ")[0], "trending", "podcast"],
     }));
 
     send("podcasts", { topic, podcasts: fallback, fallback: true });
@@ -403,6 +321,7 @@ Format:
     res.end();
   }
 };
+
 
 // ================================================================
 // POST /api/ai/publish-kit
