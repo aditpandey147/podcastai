@@ -10,8 +10,9 @@ import {
   Download,
   RefreshCw,
   Film,
-  Search,
   X,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -83,7 +84,6 @@ function StatusBadge({ status }) {
 function VideoModal({ video, onClose }) {
   const modalRef = useRef(null);
 
-  // Close on ESC key
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === "Escape") onClose();
@@ -92,7 +92,6 @@ function VideoModal({ video, onClose }) {
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  // Lock body scroll while modal is open
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -123,7 +122,8 @@ function VideoModal({ video, onClose }) {
         style={{
           background: "linear-gradient(180deg, #06162b, #041124)",
           border: "1px solid rgba(150,120,255,.35)",
-          boxShadow: "0 24px 90px rgba(0,0,0,.7), 0 0 40px rgba(141,67,255,.15)",
+          boxShadow:
+            "0 24px 90px rgba(0,0,0,.7), 0 0 40px rgba(141,67,255,.15)",
         }}
       >
         {/* Header */}
@@ -201,6 +201,174 @@ function VideoModal({ video, onClose }) {
 }
 
 // ================================================================
+// DELETE CONFIRMATION MODAL
+// ================================================================
+function DeleteModal({ video, onClose, onConfirm, deleting }) {
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape" && !deleting) onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose, deleting]);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  if (!video) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+      style={{
+        background: "rgba(2,7,19,.92)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !deleting) onClose();
+      }}
+    >
+      <div
+        className="relative w-full max-w-[460px] rounded-[16px] overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #0e0a1f, #06111f)",
+          border: "1px solid rgba(248,113,113,.35)",
+          boxShadow:
+            "0 24px 90px rgba(0,0,0,.75), 0 0 60px rgba(248,113,113,.15)",
+        }}
+      >
+        {/* Subtle red glow at top */}
+        <div
+          className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-48 rounded-full blur-3xl pointer-events-none"
+          style={{ background: "rgba(248,113,113,.18)" }}
+        />
+
+        {/* Header */}
+        <div className="relative px-5 pt-5 pb-4 flex items-start gap-3.5">
+          <div
+            className="grid place-items-center w-11 h-11 rounded-[12px] shrink-0"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(248,113,113,.25), rgba(248,113,113,.1))",
+              border: "1px solid rgba(248,113,113,.45)",
+              boxShadow: "0 0 24px rgba(248,113,113,.25)",
+            }}
+          >
+            <AlertTriangle size={20} className="text-[#fca5a5]" />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[16px] font-semibold text-[#edf4ff] leading-tight">
+              Delete this video?
+            </h3>
+            <p className="text-[12px] text-[#8fa0ba] mt-1 leading-[1.5]">
+              This action cannot be undone. The video file and all data will be
+              permanently removed from your library.
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            disabled={deleting}
+            className="grid place-items-center w-7 h-7 rounded-full text-[#b7c9df] transition-colors hover:bg-[#0a1a32] shrink-0 disabled:opacity-40"
+            aria-label="Close"
+          >
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Video preview chip */}
+        <div className="relative px-5 pb-4">
+          <div
+            className="flex items-center gap-3 rounded-[10px] p-2.5"
+            style={{
+              background: "rgba(6,20,42,.7)",
+              border: "1px solid rgba(80,150,255,.15)",
+            }}
+          >
+            <div
+              className="w-12 h-12 rounded-[8px] overflow-hidden shrink-0"
+              style={{ background: "#02070c" }}
+            >
+              {video.coverImage ? (
+                <img
+                  src={getImageUrl(video.coverImage)}
+                  alt={video.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full grid place-items-center">
+                  <Film size={16} className="text-[#5f7391]" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[12.5px] font-medium text-[#eaf1ff] truncate">
+                {video.title}
+              </div>
+              <div className="text-[10.5px] text-[#7d90ac] mt-0.5 truncate">
+                {video.category || "Podcast"} •{" "}
+                {new Date(video.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div
+          className="relative flex items-center justify-end gap-2.5 px-5 py-4"
+          style={{ borderTop: "1px solid rgba(58,91,132,.25)" }}
+        >
+          <button
+            onClick={onClose}
+            disabled={deleting}
+            className="h-[40px] px-5 rounded-[10px] text-[12.5px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952] disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              border: "1px solid #1d568e",
+              background: "#061b37",
+            }}
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={onConfirm}
+            disabled={deleting}
+            className="h-[40px] px-5 rounded-[10px] text-[12.5px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+            style={{
+              background:
+                "linear-gradient(100deg, #dc2626, #ef4444)",
+              boxShadow: "0 6px 18px rgba(239,68,68,.4)",
+            }}
+          >
+            {deleting ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Deleting…
+              </>
+            ) : (
+              <>
+                <Trash2 size={14} />
+                Delete Video
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
 // PAGE
 // ================================================================
 export default function MyPodcasts() {
@@ -208,6 +376,10 @@ export default function MyPodcasts() {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeVideo, setActiveVideo] = useState(null);
+
+  // ---- Delete state ----
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -221,7 +393,6 @@ export default function MyPodcasts() {
     }
   }, []);
 
-  // ---- Initial fetch ----
   useEffect(() => {
     fetchVideos();
   }, [fetchVideos]);
@@ -236,6 +407,29 @@ export default function MyPodcasts() {
     const interval = setInterval(fetchVideos, 5000);
     return () => clearInterval(interval);
   }, [videos, fetchVideos]);
+
+  // ---- Handle delete ----
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    try {
+      const res = await api.delete(`/video/${deleteTarget.id}`);
+      if (res.data?.success) {
+        toast.success("Video deleted");
+        // Optimistically remove from local list
+        setVideos((prev) => prev.filter((v) => v.id !== deleteTarget.id));
+        setDeleteTarget(null);
+      } else {
+        throw new Error(res.data?.message || "Delete failed");
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast.error(err.response?.data?.message || "Failed to delete video");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div
@@ -337,16 +531,30 @@ export default function MyPodcasts() {
                 </div>
               </div>
 
-              <button
-                onClick={() => navigate("/create-podcast")}
-                className="h-[40px] px-4 rounded-[10px] text-[12px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110"
-                style={{
-                  background: "linear-gradient(100deg, #6e35ed, #3483ff)",
-                  boxShadow: "0 6px 20px rgba(58,90,255,.3)",
-                }}
-              >
-                + Create New
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={fetchVideos}
+                  className="h-[40px] px-3 rounded-[10px] text-[12px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952] flex items-center gap-2"
+                  style={{
+                    border: "1px solid #1d568e",
+                    background: "#061b37",
+                  }}
+                >
+                  <RefreshCw size={13} />
+                  Refresh
+                </button>
+
+                <button
+                  onClick={() => navigate("/create-podcast")}
+                  className="h-[40px] px-4 rounded-[10px] text-[12px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110"
+                  style={{
+                    background: "linear-gradient(100deg, #6e35ed, #3483ff)",
+                    boxShadow: "0 6px 20px rgba(58,90,255,.3)",
+                  }}
+                >
+                  + Create New
+                </button>
+              </div>
             </div>
 
             {/* LOADING / EMPTY / GRID */}
@@ -406,8 +614,8 @@ export default function MyPodcasts() {
                   <VideoCard
                     key={v.id}
                     video={v}
-                    onRefresh={fetchVideos}
                     onPlay={() => setActiveVideo(v)}
+                    onDelete={() => setDeleteTarget(v)}
                   />
                 ))}
               </div>
@@ -416,11 +624,20 @@ export default function MyPodcasts() {
         </main>
       </div>
 
-      {/* MODAL */}
+      {/* MODALS */}
       {activeVideo && (
         <VideoModal
           video={activeVideo}
           onClose={() => setActiveVideo(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteModal
+          video={deleteTarget}
+          deleting={deleting}
+          onClose={() => !deleting && setDeleteTarget(null)}
+          onConfirm={handleDeleteConfirm}
         />
       )}
     </div>
@@ -430,7 +647,7 @@ export default function MyPodcasts() {
 // ================================================================
 // VIDEO CARD
 // ================================================================
-function VideoCard({ video, onRefresh, onPlay }) {
+function VideoCard({ video, onPlay, onDelete }) {
   const isProcessing =
     video.status === "queued" || video.status === "processing";
   const isCompleted = video.status === "completed";
@@ -441,6 +658,11 @@ function VideoCard({ video, onRefresh, onPlay }) {
   const handlePlayClick = (e) => {
     e.stopPropagation();
     onPlay();
+  };
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    onDelete();
   };
 
   return (
@@ -455,7 +677,6 @@ function VideoCard({ video, onRefresh, onPlay }) {
       <div className="relative aspect-video bg-[#020713] overflow-hidden">
         {isCompleted && playableUrl ? (
           <>
-            {/* Poster / thumbnail */}
             <img
               src={getImageUrl(video.coverImage)}
               alt={video.title}
@@ -465,7 +686,6 @@ function VideoCard({ video, onRefresh, onPlay }) {
               }}
             />
 
-            {/* Dark overlay on hover */}
             <div
               className="absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100"
               style={{
@@ -493,11 +713,7 @@ function VideoCard({ video, onRefresh, onPlay }) {
                   WebkitBackdropFilter: "blur(6px)",
                 }}
               >
-                <Play
-                  size={22}
-                  fill="white"
-                  className="text-white ml-[2px]"
-                />
+                <Play size={22} fill="white" className="text-white ml-[2px]" />
               </span>
             </button>
           </>
@@ -569,6 +785,25 @@ function VideoCard({ video, onRefresh, onPlay }) {
         <div className="absolute top-2.5 left-2.5 z-20">
           <StatusBadge status={video.status} />
         </div>
+
+        {/* Delete button top-right (only on completed) */}
+        {isCompleted && (
+          <button
+            type="button"
+            onClick={handleDeleteClick}
+            className="absolute top-2.5 right-2.5 z-20 grid place-items-center w-7 h-7 rounded-full transition-all opacity-0 group-hover:opacity-100 hover:bg-[rgba(239,68,68,.25)]"
+            style={{
+              background: "rgba(6,20,42,.85)",
+              border: "1px solid rgba(239,68,68,.45)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+            }}
+            aria-label="Delete video"
+            title="Delete"
+          >
+            <Trash2 size={13} className="text-[#fca5a5]" />
+          </button>
+        )}
       </div>
 
       <div className="p-3.5">
