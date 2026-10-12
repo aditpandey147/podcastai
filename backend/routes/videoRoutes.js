@@ -5,6 +5,8 @@ const {
   generateVideo,
   getMyVideos,
   getVideo,
+  deleteVideo,
+  bulkDeleteVideos,
 } = require("../controllers/videoController");
 
 const router = express.Router();
@@ -12,5 +14,7 @@ const router = express.Router();
 router.post("/generate", authMiddleware, generateVideo);
 router.get("/my-videos", authMiddleware, getMyVideos);
 router.get("/:id", authMiddleware, getVideo);
+router.delete("/:id", authMiddleware, deleteVideo);
+router.post("/bulk-delete", authMiddleware, bulkDeleteVideos);
 
 module.exports = router;
