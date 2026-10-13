@@ -29,6 +29,7 @@ import toast from "react-hot-toast";
 import bannerBg from "../assets/images/createvideo-banner-bg.png";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
+const MAX_DIALOG_CHARS = 60;
 
 const getImageUrl = (path) => {
   if (!path) return "";
@@ -50,8 +51,22 @@ const MUSIC_OPTIONS = [
 ];
 
 // ================================================================
+// CHARACTER COUNTER
+// ================================================================
+function CharCounter({ value, max = MAX_DIALOG_CHARS }) {
+  const len = value?.length || 0;
+  const color =
+    len >= max ? "#f87171" : len >= max - 5 ? "#ffcf70" : "#7d90ac";
+
+  return (
+    <span className="text-[10px] tabular-nums" style={{ color }}>
+      {len}/{max}
+    </span>
+  );
+}
+
+// ================================================================
 // RATE-LIMIT MODAL
-// Shows info.message from backend (rateLimit.js)
 // ================================================================
 function RateLimitModal({ info, onClose, onChangeTemplate }) {
   const [secondsLeft, setSecondsLeft] = useState(info?.waitSeconds || 0);
@@ -160,13 +175,11 @@ function RateLimitModal({ info, onClose, onChangeTemplate }) {
           boxShadow: `0 30px 100px rgba(0,0,0,.8), 0 0 60px ${glow}`,
         }}
       >
-        {/* Top ambient glow */}
         <div
           className="absolute -top-32 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full blur-3xl pointer-events-none"
           style={{ background: glow }}
         />
 
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-20 grid place-items-center w-8 h-8 rounded-full text-[#b7c9df] transition-colors hover:bg-[#0a1a32]"
@@ -185,9 +198,7 @@ function RateLimitModal({ info, onClose, onChangeTemplate }) {
           </svg>
         </button>
 
-        {/* Content */}
         <div className="relative px-7 pt-8 pb-7 text-center">
-          {/* Circular progress with icon */}
           <div
             className="relative mx-auto mb-6"
             style={{ width: ringSize, height: ringSize }}
@@ -231,13 +242,11 @@ function RateLimitModal({ info, onClose, onChangeTemplate }) {
             </div>
           </div>
 
-          {/* Heading */}
           <h3 className="text-[20px] font-semibold text-[#eef4ff] mb-1.5">
             {title}
           </h3>
           <p className="text-[12.5px] text-[#8fa0ba] mb-5">{subtitle}</p>
 
-          {/* Countdown box */}
           <div
             className="rounded-[14px] px-5 py-4 mb-5"
             style={{
@@ -259,12 +268,10 @@ function RateLimitModal({ info, onClose, onChangeTemplate }) {
             </div>
           </div>
 
-          {/* Friendly message from rateLimit.js */}
           <p className="text-[12.5px] leading-[1.65] text-[#aebfd5] mb-6">
             {info.message}
           </p>
 
-          {/* Actions */}
           <div className="flex items-center gap-2.5">
             <button
               onClick={onChangeTemplate}
@@ -314,10 +321,13 @@ export default function CreateProduct() {
 
   // ---- Core form ----
   const [hostLine, setHostLine] = useState(
-    dialog?.host || "Welcome to the show..."
+    (dialog?.host || "Welcome to the show...").slice(0, MAX_DIALOG_CHARS)
   );
   const [guestLine, setGuestLine] = useState(
-    dialog?.guest || "What really happened that night?"
+    (dialog?.guest || "What really happened that night?").slice(
+      0,
+      MAX_DIALOG_CHARS
+    )
   );
   const [format, setFormat] = useState("16:9");
 
@@ -369,8 +379,13 @@ export default function CreateProduct() {
         role,
       });
 
-      const polished = res.data?.text || "";
+      let polished = res.data?.text || "";
       if (!polished) throw new Error("Empty response");
+
+      // Enforce max length on the AI result
+      if (polished.length > MAX_DIALOG_CHARS) {
+        polished = polished.slice(0, MAX_DIALOG_CHARS).trim();
+      }
 
       setText(polished);
       toast.success(`${isHost ? "Host" : "Guest"} line enhanced!`);
@@ -390,6 +405,10 @@ export default function CreateProduct() {
   const handleGenerate = async () => {
     if (!hostLine.trim() || !guestLine.trim()) {
       toast.error("Please fill in both host and guest lines");
+      return;
+    }
+    if (hostLine.length > MAX_DIALOG_CHARS || guestLine.length > MAX_DIALOG_CHARS) {
+      toast.error(`Each line must be ${MAX_DIALOG_CHARS} characters or less`);
       return;
     }
     if (!coverImage) {
@@ -433,14 +452,13 @@ export default function CreateProduct() {
     } catch (err) {
       console.error("Generate failed:", err);
 
-      // 👇 RATE LIMIT — show modal with the friendly backend message
       if (err.response?.status === 429 && err.response?.data?.rateLimited) {
         setShowLoader(false);
         setGenerating(false);
         setRateLimit({
           reason: err.response.data.reason,
           waitSeconds: err.response.data.waitSeconds,
-          message: err.response.data.message, // 👈 from rateLimit.js
+          message: err.response.data.message,
         });
         return;
       }
@@ -725,12 +743,15 @@ export default function CreateProduct() {
                   </div>
                 </div>
 
-                {/* HOST */}
-                <div className="flex items-center gap-2.5 mb-2">
-                  <Users size={16} className="text-[#5f8eff]" />
-                  <span className="text-[11.5px] font-semibold tracking-[0.5px] text-[#edf4ff]">
-                    HOST
-                  </span>
+                {/* ================= HOST ================= */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <Users size={16} className="text-[#5f8eff]" />
+                    <span className="text-[11.5px] font-semibold tracking-[0.5px] text-[#edf4ff]">
+                      HOST
+                    </span>
+                  </div>
+                  <CharCounter value={hostLine} />
                 </div>
 
                 <div
@@ -744,7 +765,8 @@ export default function CreateProduct() {
                     <div
                       className="w-[40px] h-[40px] rounded-full shrink-0 flex items-center justify-center"
                       style={{
-                        background: "linear-gradient(135deg, #d99570, #28384c)",
+                        background:
+                          "linear-gradient(135deg, #d99570, #28384c)",
                         border: "2px solid #2d5b88",
                       }}
                     >
@@ -756,12 +778,14 @@ export default function CreateProduct() {
                       onChange={(e) => setHostLine(e.target.value)}
                       placeholder="What does the host say?"
                       rows={3}
+                      maxLength={MAX_DIALOG_CHARS}
                       className="w-full bg-transparent outline-none resize-none text-[12.5px] text-white leading-[1.5]"
                       style={{ minHeight: 60 }}
                     />
                   </div>
 
-                  <div className="flex justify-end mt-2">
+                  <div className="flex items-center justify-between mt-2">
+                    <CharCounter value={hostLine} />
                     <button
                       type="button"
                       onClick={() => handleEnhance("host")}
@@ -792,12 +816,15 @@ export default function CreateProduct() {
                   style={{ height: 1, background: "#0b2949" }}
                 />
 
-                {/* GUEST */}
-                <div className="flex items-center gap-2.5 mb-2">
-                  <Users size={16} className="text-[#8d7dff]" />
-                  <span className="text-[11.5px] font-semibold tracking-[0.5px] text-[#edf4ff]">
-                    GUEST
-                  </span>
+                {/* ================= GUEST ================= */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <Users size={16} className="text-[#8d7dff]" />
+                    <span className="text-[11.5px] font-semibold tracking-[0.5px] text-[#edf4ff]">
+                      GUEST
+                    </span>
+                  </div>
+                  <CharCounter value={guestLine} />
                 </div>
 
                 <div
@@ -811,7 +838,8 @@ export default function CreateProduct() {
                     <div
                       className="w-[40px] h-[40px] rounded-full shrink-0 flex items-center justify-center"
                       style={{
-                        background: "linear-gradient(135deg, #f0b08d, #473c4a)",
+                        background:
+                          "linear-gradient(135deg, #f0b08d, #473c4a)",
                         border: "2px solid #2d5b88",
                       }}
                     >
@@ -823,12 +851,14 @@ export default function CreateProduct() {
                       onChange={(e) => setGuestLine(e.target.value)}
                       placeholder="What does the guest say?"
                       rows={3}
+                      maxLength={MAX_DIALOG_CHARS}
                       className="w-full bg-transparent outline-none resize-none text-[12.5px] text-white leading-[1.5]"
                       style={{ minHeight: 60 }}
                     />
                   </div>
 
-                  <div className="flex justify-end mt-2">
+                  <div className="flex items-center justify-between mt-2">
+                    <CharCounter value={guestLine} />
                     <button
                       type="button"
                       onClick={() => handleEnhance("guest")}
@@ -859,7 +889,7 @@ export default function CreateProduct() {
                   style={{ height: 1, background: "#0b2949" }}
                 />
 
-                {/* ADDITIONAL SETTINGS */}
+                {/* ================= ADDITIONAL SETTINGS ================= */}
                 <div className="flex items-center gap-2.5 mb-3">
                   <Settings size={16} className="text-[#6ddcff]" />
                   <span className="text-[13px] font-medium text-[#edf4ff]">
@@ -952,7 +982,7 @@ export default function CreateProduct() {
                   style={{ height: 1, background: "#0b2949" }}
                 />
 
-                {/* VIDEO FORMAT */}
+                {/* ================= VIDEO FORMAT ================= */}
                 <div className="flex items-center gap-2.5 mb-3">
                   <LayoutPanelTop size={17} className="text-[#bd57ff]" />
                   <span className="text-[13px] font-medium text-[#edf4ff]">
@@ -961,6 +991,7 @@ export default function CreateProduct() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
+                  {/* Landscape */}
                   <button
                     type="button"
                     onClick={() => setFormat("16:9")}
@@ -1005,6 +1036,7 @@ export default function CreateProduct() {
                     </div>
                   </button>
 
+                  {/* Portrait */}
                   <button
                     type="button"
                     onClick={() => setFormat("9:16")}
@@ -1050,7 +1082,7 @@ export default function CreateProduct() {
                   </button>
                 </div>
 
-                {/* GENERATE BUTTON */}
+                {/* ================= GENERATE BUTTON ================= */}
                 <button
                   type="button"
                   onClick={handleGenerate}
@@ -1088,7 +1120,7 @@ export default function CreateProduct() {
         </main>
       </div>
 
-      {/* LOADER */}
+      {/* ============ LOADER ============ */}
       {showLoader && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center"
@@ -1165,7 +1197,7 @@ export default function CreateProduct() {
         </div>
       )}
 
-      {/* SUCCESS MODAL */}
+      {/* ============ SUCCESS MODAL ============ */}
       {showSuccess && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center"
@@ -1239,7 +1271,7 @@ export default function CreateProduct() {
         </div>
       )}
 
-      {/* 👇 RATE LIMIT MODAL — shows info.message from rateLimit.js */}
+      {/* ============ RATE LIMIT MODAL ============ */}
       {rateLimit && (
         <RateLimitModal
           info={rateLimit}
