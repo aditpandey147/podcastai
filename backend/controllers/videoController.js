@@ -5,6 +5,11 @@ const path = require("path");
 const Video = require("../models/Video");
 const ai = require("../services/aiService");
 
+const {
+  checkVideoGenerationLimit,
+  getGenerationStats: getStatsFromVideos,
+} = require("../utils/rateLimit");
+
 // ================================================================
 // 📁 VIDEOS DIRECTORY
 // ================================================================
@@ -44,7 +49,6 @@ function deleteLocalVideoFile(urlOrPath) {
   if (!urlOrPath) return false;
 
   try {
-    // Extract pathname if it's a full URL
     let pathname = urlOrPath;
     if (/^https?:\/\//i.test(urlOrPath)) {
       try {
@@ -54,7 +58,6 @@ function deleteLocalVideoFile(urlOrPath) {
       }
     }
 
-    // Only handle /uploads/videos/* files
     if (!pathname.startsWith("/uploads/videos/")) {
       return false;
     }
@@ -62,7 +65,6 @@ function deleteLocalVideoFile(urlOrPath) {
     const filename = path.basename(pathname);
     const filePath = path.join(VIDEOS_DIR, filename);
 
-    // Safety: ensure resolved path is inside VIDEOS_DIR
     const resolved = path.resolve(filePath);
     if (!resolved.startsWith(path.resolve(VIDEOS_DIR))) {
       console.warn("🚫 Refusing to delete outside VIDEOS_DIR:", resolved);
@@ -125,6 +127,27 @@ exports.generateVideo = async (req, res) => {
       });
     }
 
+    // ------------------------------------------------------------
+    // 🚦 RATE LIMIT CHECK
+    // ------------------------------------------------------------
+    const limit = await checkVideoGenerationLimit(userId);
+
+    if (!limit.allowed) {
+      console.log(
+        `🚦 Rate limited user ${userId} — reason: ${limit.reason} (wait ${limit.waitSeconds}s)`
+      );
+      return res.status(429).json({
+        success: false,
+        rateLimited: true,
+        reason: limit.reason,
+        waitSeconds: limit.waitSeconds,
+        message: limit.message,
+      });
+    }
+
+    // ------------------------------------------------------------
+    // Validate input
+    // ------------------------------------------------------------
     const {
       imageUrl: incomingImageUrl,
       hostLine,
@@ -158,6 +181,9 @@ exports.generateVideo = async (req, res) => {
         .json({ success: false, message: "Both dialog lines required" });
     }
 
+    // ------------------------------------------------------------
+    // Create video record — this IS the rate-limit record
+    // ------------------------------------------------------------
     const videoDoc = await Video.create({
       userId,
       templateId: templateId || null,
@@ -173,6 +199,11 @@ exports.generateVideo = async (req, res) => {
       progress: 0,
     });
 
+    console.log(`🎬 Video ${videoDoc.id} queued for user ${userId}`);
+
+    // ------------------------------------------------------------
+    // Kick off async pipeline
+    // ------------------------------------------------------------
     processVideo(videoDoc._id, imageUrl).catch((err) =>
       console.error("processVideo async error:", err)
     );
@@ -195,6 +226,7 @@ async function processVideo(videoMongoId, imageUrl) {
   let localVideoPath = null;
 
   try {
+    // ---- Step 1: Vision → prompt ----
     await Video.findByIdAndUpdate(videoMongoId, {
       status: "processing",
       progress: 15,
@@ -223,18 +255,22 @@ Write the image-to-video prompt.`,
     });
 
     console.log("✅ Video prompt:", videoPrompt);
-    console.log("🎬 Passing to ai.video → format:", doc.format);
 
-    const remoteVideoUrl = await ai.videoFast({
+    // ---- Step 2: Video generation — pruna p-video (fast) ----
+    console.log("⚡ Generating with pruna — format:", doc.format);
+
+    const remoteVideoUrl = await ai.video({
       imageUrl,
       prompt: videoPrompt,
-      format: doc.format,   // only thing that varies per user
+      format: doc.format,
     });
 
-    console.log("🎥 Replicate URL:", remoteVideoUrl);
+    console.log("⚡ pruna URL:", remoteVideoUrl);
 
+    // ---- Step 3: Download to local ----
     localVideoPath = await downloadVideoToLocal(remoteVideoUrl, doc.id);
 
+    // ---- Step 4: Save both paths in DB ----
     await Video.findByIdAndUpdate(videoMongoId, {
       videoUrl: remoteVideoUrl,
       localVideoUrl: localVideoPath,
@@ -288,6 +324,27 @@ exports.getMyVideos = async (req, res) => {
 };
 
 // ================================================================
+// GET /api/video/generation-stats
+// ================================================================
+exports.getGenerationStats = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
+
+    const stats = await getStatsFromVideos(userId);
+    res.json({ success: true, data: stats });
+  } catch (err) {
+    console.error("getGenerationStats error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ================================================================
 // GET /api/video/:id
 // ================================================================
 exports.getVideo = async (req, res) => {
@@ -320,7 +377,6 @@ exports.getVideo = async (req, res) => {
 
 // ================================================================
 // DELETE /api/video/:id
-// Deletes the DB record AND the local file from disk
 // ================================================================
 exports.deleteVideo = async (req, res) => {
   try {
@@ -339,7 +395,6 @@ exports.deleteVideo = async (req, res) => {
         .json({ success: false, message: "Invalid video id" });
     }
 
-    // Find the video — verify ownership
     const video = await Video.findOne({ id: idNum, userId });
 
     if (!video) {
@@ -348,12 +403,7 @@ exports.deleteVideo = async (req, res) => {
         .json({ success: false, message: "Video not found" });
     }
 
-    // ---- Delete local file(s) from disk (best-effort) ----
-    const filesToDelete = [
-      video.localVideoUrl,
-      video.videoUrl, // only matches /uploads/videos/* — URLs pointing elsewhere are skipped
-    ].filter(Boolean);
-
+    const filesToDelete = [video.localVideoUrl, video.videoUrl].filter(Boolean);
     const deletedFiles = [];
     for (const url of filesToDelete) {
       if (deleteLocalVideoFile(url)) {
@@ -361,7 +411,6 @@ exports.deleteVideo = async (req, res) => {
       }
     }
 
-    // ---- Delete DB record ----
     await Video.deleteOne({ _id: video._id });
 
     console.log(
@@ -382,7 +431,6 @@ exports.deleteVideo = async (req, res) => {
 
 // ================================================================
 // POST /api/video/bulk-delete
-// body: { videoIds: [1, 3, 5] }
 // ================================================================
 exports.bulkDeleteVideos = async (req, res) => {
   try {
@@ -402,7 +450,6 @@ exports.bulkDeleteVideos = async (req, res) => {
         .json({ success: false, message: "videoIds array required" });
     }
 
-    // Fetch only the user's videos
     const videos = await Video.find({
       id: { $in: videoIds },
       userId,
@@ -414,7 +461,6 @@ exports.bulkDeleteVideos = async (req, res) => {
         .json({ success: false, message: "No matching videos found" });
     }
 
-    // ---- Delete local files ----
     let filesDeleted = 0;
     for (const v of videos) {
       const urls = [v.localVideoUrl, v.videoUrl].filter(Boolean);
@@ -423,7 +469,6 @@ exports.bulkDeleteVideos = async (req, res) => {
       }
     }
 
-    // ---- Delete DB records ----
     const result = await Video.deleteMany({
       _id: { $in: videos.map((v) => v._id) },
     });
