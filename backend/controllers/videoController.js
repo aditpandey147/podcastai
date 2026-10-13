@@ -225,10 +225,10 @@ Write the image-to-video prompt.`,
     console.log("✅ Video prompt:", videoPrompt);
     console.log("🎬 Passing to ai.video → format:", doc.format);
 
-    const remoteVideoUrl = await ai.video({
+    const remoteVideoUrl = await ai.videoFast({
       imageUrl,
       prompt: videoPrompt,
-      format: doc.format,
+      format: doc.format,   // only thing that varies per user
     });
 
     console.log("🎥 Replicate URL:", remoteVideoUrl);
