@@ -218,7 +218,7 @@ async function videoFast({
   imageUrl,
   prompt,
   format = "landscape",
-  duration = 10,
+  duration = 2,
   resolution = "720p",
   fps = 24,
   saveAudio = true,
