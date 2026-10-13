@@ -18,6 +18,9 @@ import {
   Music2,
   Sparkles,
   Mic,
+  Hourglass,
+  Calendar,
+  Zap,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -47,6 +50,254 @@ const MUSIC_OPTIONS = [
 ];
 
 // ================================================================
+// RATE-LIMIT MODAL
+// Shows info.message from backend (rateLimit.js)
+// ================================================================
+function RateLimitModal({ info, onClose, onChangeTemplate }) {
+  const [secondsLeft, setSecondsLeft] = useState(info?.waitSeconds || 0);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!info) return;
+    setSecondsLeft(info.waitSeconds || 0);
+
+    const t = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(t);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(t);
+  }, [info]);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  if (!info) return null;
+
+  const reasonMeta = {
+    cooldown: {
+      Icon: Hourglass,
+      color: "#a98bff",
+      accent: "rgba(141,67,255,.5)",
+      glow: "rgba(141,67,255,.15)",
+      title: "Almost Ready, Creator",
+      subtitle: "A quick pause keeps the quality high.",
+    },
+    daily_limit: {
+      Icon: Calendar,
+      color: "#7dc4ff",
+      accent: "rgba(52,131,255,.5)",
+      glow: "rgba(52,131,255,.15)",
+      title: "That's A Wrap For Today",
+      subtitle: "You've had a fantastic creative day.",
+    },
+    window_limit: {
+      Icon: Zap,
+      color: "#ffcf70",
+      accent: "rgba(255,207,112,.5)",
+      glow: "rgba(255,207,112,.15)",
+      title: "Fresh Slots Loading",
+      subtitle: "New creative space is on the way.",
+    },
+  };
+
+  const meta = reasonMeta[info.reason] || reasonMeta.cooldown;
+  const { Icon, color, accent, glow, title, subtitle } = meta;
+
+  const formatTime = (sec) => {
+    if (sec <= 0) return "Ready now";
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${String(s).padStart(2, "0")}s`;
+    return `${s}s`;
+  };
+
+  const total = info.waitSeconds || 1;
+  const progress = Math.max(0, Math.min(1, (total - secondsLeft) / total));
+
+  const ringSize = 120;
+  const stroke = 6;
+  const radius = (ringSize - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - progress);
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      style={{
+        background: "rgba(2,7,19,.94)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="relative w-full max-w-[480px] rounded-[20px] overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #06162b, #041124)",
+          border: `1px solid ${accent}`,
+          boxShadow: `0 30px 100px rgba(0,0,0,.8), 0 0 60px ${glow}`,
+        }}
+      >
+        {/* Top ambient glow */}
+        <div
+          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full blur-3xl pointer-events-none"
+          style={{ background: glow }}
+        />
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 grid place-items-center w-8 h-8 rounded-full text-[#b7c9df] transition-colors hover:bg-[#0a1a32]"
+          aria-label="Close"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          >
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Content */}
+        <div className="relative px-7 pt-8 pb-7 text-center">
+          {/* Circular progress with icon */}
+          <div
+            className="relative mx-auto mb-6"
+            style={{ width: ringSize, height: ringSize }}
+          >
+            <svg
+              width={ringSize}
+              height={ringSize}
+              style={{ transform: "rotate(-90deg)", overflow: "visible" }}
+            >
+              <circle
+                cx={ringSize / 2}
+                cy={ringSize / 2}
+                r={radius}
+                fill="none"
+                stroke="rgba(20,50,90,.6)"
+                strokeWidth={stroke}
+              />
+              <circle
+                cx={ringSize / 2}
+                cy={ringSize / 2}
+                r={radius}
+                fill="none"
+                stroke={color}
+                strokeWidth={stroke}
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                style={{
+                  transition: "stroke-dashoffset 1s linear",
+                  filter: `drop-shadow(0 0 8px ${color})`,
+                }}
+              />
+            </svg>
+            <div
+              className="absolute inset-3 rounded-full grid place-items-center"
+              style={{
+                background: `radial-gradient(circle, ${glow}, transparent 70%)`,
+              }}
+            >
+              <Icon size={36} strokeWidth={1.8} style={{ color }} />
+            </div>
+          </div>
+
+          {/* Heading */}
+          <h3 className="text-[20px] font-semibold text-[#eef4ff] mb-1.5">
+            {title}
+          </h3>
+          <p className="text-[12.5px] text-[#8fa0ba] mb-5">{subtitle}</p>
+
+          {/* Countdown box */}
+          <div
+            className="rounded-[14px] px-5 py-4 mb-5"
+            style={{
+              background: "rgba(6,20,42,.7)",
+              border: "1px solid rgba(80,150,255,.15)",
+            }}
+          >
+            <div className="text-[10px] uppercase tracking-[1.4px] text-[#7d90ac] font-semibold mb-1.5">
+              {secondsLeft > 0 ? "Available in" : "Ready to create"}
+            </div>
+            <div
+              className="text-[26px] font-bold tabular-nums"
+              style={{
+                color,
+                textShadow: `0 0 20px ${glow}`,
+              }}
+            >
+              {formatTime(secondsLeft)}
+            </div>
+          </div>
+
+          {/* Friendly message from rateLimit.js */}
+          <p className="text-[12.5px] leading-[1.65] text-[#aebfd5] mb-6">
+            {info.message}
+          </p>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={onChangeTemplate}
+              className="flex-1 h-[44px] rounded-[11px] text-[12.5px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952]"
+              style={{
+                border: "1px solid #1d568e",
+                background: "#061b37",
+              }}
+            >
+              Browse Templates
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 h-[44px] rounded-[11px] text-[12.5px] font-semibold text-white transition-all hover:brightness-110"
+              style={{
+                background: "linear-gradient(100deg, #6e35ed, #3483ff)",
+                boxShadow: "0 6px 20px rgba(58,90,255,.3)",
+              }}
+            >
+              Got it
+            </button>
+          </div>
+
+          <p className="text-[10.5px] text-[#5f7391] mt-4">
+            Tip: You can still edit your script while you wait.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
 // PAGE
 // ================================================================
 export default function CreateProduct() {
@@ -63,10 +314,10 @@ export default function CreateProduct() {
 
   // ---- Core form ----
   const [hostLine, setHostLine] = useState(
-    dialog?.host || "Welcome to the show...",
+    dialog?.host || "Welcome to the show..."
   );
   const [guestLine, setGuestLine] = useState(
-    dialog?.guest || "What really happened that night?",
+    dialog?.guest || "What really happened that night?"
   );
   const [format, setFormat] = useState("16:9");
 
@@ -83,6 +334,9 @@ export default function CreateProduct() {
   const [statusMsg, setStatusMsg] = useState("");
   const [showLoader, setShowLoader] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // ---- Rate limit modal ----
+  const [rateLimit, setRateLimit] = useState(null);
 
   // ---- Redirect guard ----
   useEffect(() => {
@@ -123,7 +377,7 @@ export default function CreateProduct() {
     } catch (err) {
       console.error("Enhance failed:", err);
       toast.error(
-        err.response?.data?.message || "Failed to enhance. Try again.",
+        err.response?.data?.message || "Failed to enhance. Try again."
       );
     } finally {
       setLoading(false);
@@ -149,19 +403,16 @@ export default function CreateProduct() {
       setStatusMsg("");
 
       const imageUrl = getImageUrl(coverImage);
-
-      // 👇 Convert UI value ("16:9" | "9:16") → backend value ("landscape" | "portrait")
       const backendFormat = format === "9:16" ? "portrait" : "landscape";
       console.log("🎬 Sending format:", backendFormat);
 
-      // Fire the request
       const res = await api.post("/video/generate", {
         imageUrl,
         hostLine: hostLine.trim(),
         guestLine: guestLine.trim(),
         tone,
         music,
-        format: backendFormat, // 👈 only this line changed
+        format: backendFormat,
         templateId,
         templateTitle,
         templateCategory,
@@ -170,21 +421,32 @@ export default function CreateProduct() {
 
       if (!res.data?.success) throw new Error("Generation failed");
 
-      // Keep loader visible for a full 10 seconds
       setTimeout(() => {
         setShowLoader(false);
         setShowSuccess(true);
         setGenerating(false);
 
-        // Auto redirect after showing success modal
         setTimeout(() => {
           navigate("/my-podcasts");
         }, 2500);
       }, 10000);
     } catch (err) {
       console.error("Generate failed:", err);
+
+      // 👇 RATE LIMIT — show modal with the friendly backend message
+      if (err.response?.status === 429 && err.response?.data?.rateLimited) {
+        setShowLoader(false);
+        setGenerating(false);
+        setRateLimit({
+          reason: err.response.data.reason,
+          waitSeconds: err.response.data.waitSeconds,
+          message: err.response.data.message, // 👈 from rateLimit.js
+        });
+        return;
+      }
+
       toast.error(
-        err.response?.data?.message || "Failed to generate. Try again.",
+        err.response?.data?.message || "Failed to generate. Try again."
       );
       setShowLoader(false);
       setGenerating(false);
@@ -310,7 +572,6 @@ export default function CreateProduct() {
                     border: "1px solid #18518c",
                   }}
                 >
-                  {/* Preview scene */}
                   <div
                     className="relative h-[350px] md:h-[450px] overflow-hidden"
                     style={{
@@ -359,73 +620,6 @@ export default function CreateProduct() {
                               "drop-shadow(0 0 25px rgba(255,210,117,.6))",
                           }}
                         />
-                        <div
-                          className="absolute"
-                          style={{
-                            left: "50%",
-                            top: 56,
-                            transform: "translateX(-50%)",
-                            width: 220,
-                            height: 165,
-                            border: "2px solid #0c2438",
-                            background:
-                              "linear-gradient(90deg, transparent 0 48%, rgba(42,64,93,.38) 49% 51%, transparent 52%), linear-gradient(180deg, #142536, #07111b 70%)",
-                            boxShadow: "inset 0 0 50px #000",
-                          }}
-                        />
-                        <div
-                          className="absolute"
-                          style={{
-                            left: "50%",
-                            top: 76,
-                            transform: "translateX(-50%)",
-                            width: 56,
-                            height: 90,
-                            background: "#02070b",
-                            border: "1px solid #294057",
-                          }}
-                        />
-                        <div
-                          className="absolute"
-                          style={{
-                            bottom: -14,
-                            left: "13%",
-                            width: 110,
-                            height: 145,
-                            borderRadius: "70px 70px 15px 15px",
-                            background:
-                              "linear-gradient(145deg, #172b3c, #03070b 68%)",
-                            boxShadow: "0 -5px 35px rgba(0,0,0,.5)",
-                            transform: "rotate(9deg)",
-                          }}
-                        />
-                        <div
-                          className="absolute"
-                          style={{
-                            bottom: -14,
-                            right: "13%",
-                            width: 110,
-                            height: 145,
-                            borderRadius: "70px 70px 15px 15px",
-                            background:
-                              "linear-gradient(145deg, #172432, #02060a 70%)",
-                            boxShadow: "0 -5px 35px rgba(0,0,0,.5)",
-                            transform: "rotate(-9deg)",
-                          }}
-                        />
-                        <div
-                          className="absolute"
-                          style={{
-                            left: "-4%",
-                            right: "-4%",
-                            bottom: -8,
-                            height: 58,
-                            background:
-                              "linear-gradient(180deg, #1c211f, #090b0b)",
-                            borderTop: "2px solid #282d2c",
-                            boxShadow: "0 -5px 30px rgba(0,0,0,.6)",
-                          }}
-                        />
                       </>
                     )}
 
@@ -441,7 +635,6 @@ export default function CreateProduct() {
                     </div>
                   </div>
 
-                  {/* Info bar */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 px-3 md:px-[14px] py-3 md:py-0 md:h-[70px]">
                     <div className="flex items-center gap-2.5">
                       <div
@@ -489,7 +682,6 @@ export default function CreateProduct() {
                   </div>
                 </div>
 
-                {/* Template details */}
                 <div className="mt-4 flex gap-2.5">
                   <div className="text-[#b455ff] shrink-0 mt-0.5">
                     <FileText size={15} />
@@ -518,7 +710,6 @@ export default function CreateProduct() {
                   border: "1px solid #124171",
                 }}
               >
-                {/* Header */}
                 <div className="flex items-center gap-2.5 mb-4">
                   <LayoutPanelTop
                     size={22}
@@ -534,7 +725,7 @@ export default function CreateProduct() {
                   </div>
                 </div>
 
-                {/* ================= HOST ================= */}
+                {/* HOST */}
                 <div className="flex items-center gap-2.5 mb-2">
                   <Users size={16} className="text-[#5f8eff]" />
                   <span className="text-[11.5px] font-semibold tracking-[0.5px] text-[#edf4ff]">
@@ -580,7 +771,6 @@ export default function CreateProduct() {
                         background: "linear-gradient(100deg, #6e35ed, #3483ff)",
                         boxShadow: "0 4px 12px rgba(58,90,255,.28)",
                       }}
-                      aria-label="AI enhance host line"
                     >
                       {enhancingHost ? (
                         <>
@@ -602,7 +792,7 @@ export default function CreateProduct() {
                   style={{ height: 1, background: "#0b2949" }}
                 />
 
-                {/* ================= GUEST ================= */}
+                {/* GUEST */}
                 <div className="flex items-center gap-2.5 mb-2">
                   <Users size={16} className="text-[#8d7dff]" />
                   <span className="text-[11.5px] font-semibold tracking-[0.5px] text-[#edf4ff]">
@@ -648,7 +838,6 @@ export default function CreateProduct() {
                         background: "linear-gradient(100deg, #6e35ed, #3483ff)",
                         boxShadow: "0 4px 12px rgba(58,90,255,.28)",
                       }}
-                      aria-label="AI enhance guest line"
                     >
                       {enhancingGuest ? (
                         <>
@@ -670,7 +859,7 @@ export default function CreateProduct() {
                   style={{ height: 1, background: "#0b2949" }}
                 />
 
-                {/* ================= ADDITIONAL SETTINGS ================= */}
+                {/* ADDITIONAL SETTINGS */}
                 <div className="flex items-center gap-2.5 mb-3">
                   <Settings size={16} className="text-[#6ddcff]" />
                   <span className="text-[13px] font-medium text-[#edf4ff]">
@@ -718,7 +907,7 @@ export default function CreateProduct() {
                     </div>
                   </div>
 
-                  {/* Background Music */}
+                  {/* Music */}
                   <div>
                     <label className="flex items-center gap-1.5 text-[11px] font-medium text-[#b7c9df] mb-1.5">
                       <Music2 size={12} className="text-[#ff67bf]" />
@@ -763,7 +952,7 @@ export default function CreateProduct() {
                   style={{ height: 1, background: "#0b2949" }}
                 />
 
-                {/* ================= VIDEO FORMAT ================= */}
+                {/* VIDEO FORMAT */}
                 <div className="flex items-center gap-2.5 mb-3">
                   <LayoutPanelTop size={17} className="text-[#bd57ff]" />
                   <span className="text-[13px] font-medium text-[#edf4ff]">
@@ -772,7 +961,6 @@ export default function CreateProduct() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Landscape */}
                   <button
                     type="button"
                     onClick={() => setFormat("16:9")}
@@ -817,7 +1005,6 @@ export default function CreateProduct() {
                     </div>
                   </button>
 
-                  {/* Portrait */}
                   <button
                     type="button"
                     onClick={() => setFormat("9:16")}
@@ -863,7 +1050,7 @@ export default function CreateProduct() {
                   </button>
                 </div>
 
-                {/* ================= GENERATE BUTTON ================= */}
+                {/* GENERATE BUTTON */}
                 <button
                   type="button"
                   onClick={handleGenerate}
@@ -901,7 +1088,7 @@ export default function CreateProduct() {
         </main>
       </div>
 
-      {/* ============ 10-SECOND FULLSCREEN LOADER ============ */}
+      {/* LOADER */}
       {showLoader && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center"
@@ -912,7 +1099,6 @@ export default function CreateProduct() {
           }}
         >
           <div className="text-center px-6 max-w-[420px]">
-            {/* Animated rings */}
             <div
               className="relative mx-auto mb-6"
               style={{ width: 100, height: 100 }}
@@ -953,7 +1139,6 @@ export default function CreateProduct() {
               rendering your video. This takes a few moments...
             </p>
 
-            {/* Progress shimmer bar */}
             <div
               className="mt-6 h-[3px] rounded-full overflow-hidden"
               style={{ background: "rgba(58,91,132,.4)" }}
@@ -980,7 +1165,7 @@ export default function CreateProduct() {
         </div>
       )}
 
-      {/* ============ SUCCESS MODAL ============ */}
+      {/* SUCCESS MODAL */}
       {showSuccess && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center"
@@ -1000,7 +1185,6 @@ export default function CreateProduct() {
                 "0 24px 80px rgba(0,0,0,.6), 0 0 40px rgba(12,228,189,.15)",
             }}
           >
-            {/* Success icon with glow */}
             <div
               className="relative grid place-items-center w-20 h-20 rounded-full mx-auto mb-5"
               style={{
@@ -1027,7 +1211,6 @@ export default function CreateProduct() {
               You&apos;ll see it on your My Podcasts page as it processes.
             </p>
 
-            {/* Animated queue dots */}
             <div className="flex items-center justify-center gap-2 mt-5">
               {[0, 1, 2].map((i) => (
                 <span
@@ -1054,6 +1237,18 @@ export default function CreateProduct() {
             `}</style>
           </div>
         </div>
+      )}
+
+      {/* 👇 RATE LIMIT MODAL — shows info.message from rateLimit.js */}
+      {rateLimit && (
+        <RateLimitModal
+          info={rateLimit}
+          onClose={() => setRateLimit(null)}
+          onChangeTemplate={() => {
+            setRateLimit(null);
+            navigate("/templates");
+          }}
+        />
       )}
     </div>
   );
