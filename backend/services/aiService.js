@@ -9,7 +9,11 @@ const MODELS = {
   VISION_GPT: "openai/gpt-5.4",
   IMAGE_SDXL:
     "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-  VIDEO_WAN: "wan-video/wan-2.2-5b-fast",
+
+  // ---------- VIDEO MODELS ----------
+  VIDEO_WAN: "wan-video/wan-2.2-5b-fast",   // existing
+  VIDEO_PRUNE: "prunaai/p-video",           // 👈 NEW
+
   TEXT_CHAT: "deepseek-chat",
   ENDPOINTS: {
     deepseek: "https://api.deepseek.com/v1/chat/completions",
@@ -144,7 +148,6 @@ async function image({
 
 // ================================================================
 // 🎥 VIDEO — image → video (Replicate — Wan 2.2 5B Fast)
-// Accepts "landscape" | "portrait" | "square" | raw ratios
 // ================================================================
 async function video({
   imageUrl,
@@ -177,7 +180,7 @@ async function video({
   const normalized = String(format || "").toLowerCase().trim();
   const aspectRatio = FORMAT_MAP[normalized] || "16:9";
 
-  console.log("🎬 Format mapping:", {
+  console.log("🎬 [Wan] Format mapping:", {
     received: format,
     normalized,
     aspectRatio,
@@ -198,19 +201,108 @@ async function video({
     frames_per_second: fps,
   };
 
-  console.log("🎥 Replicate video input:", JSON.stringify(input, null, 2));
+  console.log("🎥 [Wan] Replicate input:", JSON.stringify(input, null, 2));
 
   const output = await replicate.run(model, { input });
 
-  console.log("🎥 Replicate video output:", output);
+  console.log("🎥 [Wan] Replicate output:", output);
+
+  return extractVideoUrl(output);
+}
+
+// ================================================================
+// ⚡ VIDEO FAST — image → video (Replicate — prunaai/p-video)
+// Generates a video in <10s using pruna's optimized pipeline.
+// ================================================================
+async function videoFast({
+  imageUrl,
+  prompt,
+  format = "landscape",
+  duration = 10,
+  resolution = "720p",
+  fps = 24,
+  saveAudio = true,
+  draft = false,
+  noOp = false,
+  promptUpsampling = false,
+  disableSafetyFilter = true,
+  model = MODELS.VIDEO_PRUNE,
+}) {
+  if (!imageUrl) throw new Error("imageUrl is required");
+  if (!prompt) throw new Error("prompt is required");
+  if (!process.env.REPLICATE_API_TOKEN) {
+    throw new Error("REPLICATE_API_TOKEN not configured");
+  }
+
+  // Normalize format → aspect_ratio
+  const FORMAT_MAP = {
+    landscape: "16:9",
+    portrait: "9:16",
+    square: "1:1",
+    "16:9": "16:9",
+    "9:16": "9:16",
+    "1:1": "1:1",
+    "4:3": "4:3",
+    "3:4": "3:4",
+  };
+
+  const normalized = String(format || "").toLowerCase().trim();
+  const aspectRatio = FORMAT_MAP[normalized] || "16:9";
+
+  // Validate duration (pruna supports 5 or 10 seconds typically)
+  const validDurations = [5, 10];
+  const dur = validDurations.includes(duration) ? duration : 5;
+
+  // Validate resolution
+  const res = ["480p", "720p"].includes(resolution) ? resolution : "720p";
+
+  const input = {
+    image: imageUrl,
+    prompt: prompt.trim(),
+    aspect_ratio: aspectRatio,
+    duration: dur,
+    resolution: res,
+    fps,
+    save_audio: saveAudio,
+    draft,
+    no_op: noOp,
+    prompt_upsampling: promptUpsampling,
+    disable_safety_filter: disableSafetyFilter,
+  };
+
+  console.log("⚡ [pruna] Format mapping:", {
+    received: format,
+    normalized,
+    aspectRatio,
+    duration: dur,
+    resolution: res,
+  });
+
+  console.log("⚡ [pruna] Replicate input:", JSON.stringify(input, null, 2));
+
+  const output = await replicate.run(model, { input });
+
+  console.log("⚡ [pruna] Replicate output:", output);
+
+  return extractVideoUrl(output);
+}
+
+// ================================================================
+// 🔧 HELPER — extract a video URL from Replicate's various shapes
+// ================================================================
+function extractVideoUrl(output) {
+  if (!output) return "";
 
   if (typeof output === "string") return output;
-  if (Array.isArray(output) && output[0]) {
+
+  if (Array.isArray(output)) {
     const first = output[0];
+    if (!first) return "";
     if (typeof first === "string") return first;
     if (first && typeof first.url === "function") return first.url();
     return String(first);
   }
+
   if (output && typeof output.url === "function") return output.url();
   return String(output);
 }
@@ -223,5 +315,7 @@ module.exports = {
   chat,
   vision,
   image,
-  video,
+  video,      // Wan 2.2 — high quality, slower
+  videoFast,  // pruna p-video — fast (<10s), good quality
+  extractVideoUrl,
 };
