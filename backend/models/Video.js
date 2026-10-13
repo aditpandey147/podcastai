@@ -36,6 +36,9 @@ const videoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+
+videoSchema.index({ userId: 1, createdAt: -1 });
+
 videoSchema.pre("save", async function () {
   if (this.isNew && !this.id) {
     const last = await this.constructor.findOne({}).sort({ id: -1 }).select("id").lean();
