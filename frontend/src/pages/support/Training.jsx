@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
-import videoThumbnail from '../../assets/video-thumbnail.jpg';
+import videoThumbnail from '../../assets/vsl.jpg';
 import {
   Play,
   BookOpen,
