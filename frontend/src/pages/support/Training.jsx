@@ -33,7 +33,7 @@ const Training = () => {
 
   // Demo Video Configuration
   const VIDEO_ID = 'YOUR_VIDEO_ID'; // Replace with your YouTube video ID
-  const videoUrl = `https://www.youtube.com/embed/${VIDEO_ID}`;
+  const videoUrl = `https://drive.google.com/file/d/1rOC7dUZvg1IX3TM15CPgF6wd_nGe0Q5a/preview`;
 
   // ================================================================
   // FAQ DATA — PodcastAI specific
