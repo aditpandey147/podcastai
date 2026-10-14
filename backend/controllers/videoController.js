@@ -259,7 +259,7 @@ Write the image-to-video prompt.`,
     // ---- Step 2: Video generation — pruna p-video (fast) ----
     console.log("⚡ Generating with pruna — format:", doc.format);
 
-    const remoteVideoUrl = await ai.video({
+    const remoteVideoUrl = await ai.videoFast({
       imageUrl,
       prompt: videoPrompt,
       format: doc.format,
