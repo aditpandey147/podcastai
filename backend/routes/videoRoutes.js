@@ -8,6 +8,7 @@ const {
   deleteVideo,
   bulkDeleteVideos,
   getGenerationStats,
+  mergeVideos,
 } = require("../controllers/videoController");
 
 const router = express.Router();
@@ -18,5 +19,6 @@ router.get("/generation-stats", authMiddleware, getGenerationStats);
 router.get("/:id", authMiddleware, getVideo);
 router.delete("/:id", authMiddleware, deleteVideo);
 router.post("/bulk-delete", authMiddleware, bulkDeleteVideos);
+router.post("/merge", authMiddleware, mergeVideos);
 
 module.exports = router;
