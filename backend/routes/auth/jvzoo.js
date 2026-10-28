@@ -107,9 +107,20 @@ const mapLaunchPadToStandard = (lpData) => {
   const productId = lpData.product_id ? String(lpData.product_id) : "";
 
   return {
-    transaction_id: lpData.transaction_id || "",
-    transaction_type: lpData.action || lpData.status || "SALE",
-    total: lpData.total_amount ? lpData.total_amount.toString() : "0.00",
+    // ✅ Use numeric `id` as transaction_id (present on LaunchPad refunds)
+    transaction_id: lpData.id
+      ? String(lpData.id)
+      : lpData.transaction_id || "",
+    // ✅ Normalise action to uppercase so "refund" / "REFUND" both match
+    transaction_type:
+      (lpData.action && String(lpData.action).toUpperCase()) ||
+      (lpData.status && String(lpData.status).toUpperCase()) ||
+      "SALE",
+    total: lpData.total_amount
+      ? lpData.total_amount.toString()
+      : lpData.amount
+        ? lpData.amount.toString()
+        : "0.00",
     date: lpData.created_at || new Date().toISOString(),
     product_id: productId,
     product_name: product.name || "",
@@ -249,6 +260,46 @@ const getPlanByProductId = async (productId, platform) => {
 };
 
 // ============================================================
+// 🗑️ REMOVE A SPECIFIC PLAN FROM A USER (used on refund)
+// ============================================================
+const removePlanFromUser = async (user, refundedPlanId) => {
+  let plans = Array.isArray(user.planId) ? [...user.planId] : [user.planId || 1];
+
+  // Remove the refunded plan
+  plans = plans.filter((id) => id !== refundedPlanId);
+
+  // No plans left → user refunded everything → deactivate
+  if (plans.length === 0) {
+    user.planId = [];
+    user.planName = "None";
+    user.isActive = false;
+    console.log(
+      `🚫 User ${user.email} has no plans left → account DEACTIVATED`,
+    );
+    return { deactivated: true, remainingPlans: [] };
+  }
+
+  // Otherwise keep remaining plans
+  user.planId = plans;
+  user.isActive = true;
+
+  // Set planName to the highest remaining plan's name
+  try {
+    const highestPlan = await Plan.findOne({
+      planId: { $in: plans },
+    }).sort({ planId: -1 });
+    user.planName = highestPlan?.name || "Free";
+  } catch (err) {
+    user.planName = "Free";
+  }
+
+  console.log(
+    `✅ Removed plan ${refundedPlanId}. Remaining plans: [${plans.join(", ")}]`,
+  );
+  return { deactivated: false, remainingPlans: plans };
+};
+
+// ============================================================
 // 📩 UNIFIED IPN ENDPOINT
 // ============================================================
 
@@ -305,6 +356,7 @@ router.post("/ipn", async (req, res) => {
       );
       console.log(`   User: ${data.customer_email}`);
       console.log(`   Amount: $${data.total}`);
+      console.log(`   Action: ${data.transaction_type}`);
     } else {
       console.log(`❌ Unknown platform: ${platform}`);
       return res.status(400).json({
@@ -327,16 +379,13 @@ router.post("/ipn", async (req, res) => {
 
     let isVerified = false;
 
-    // ✅ DEVELOPMENT MODE: Skip verification
     if (IS_DEVELOPMENT) {
       console.log(`⚠️ ${"=".repeat(50)}`);
       console.log(`⚠️ DEVELOPMENT MODE: Signature verification SKIPPED!`);
       console.log(`⚠️ Set NODE_ENV=production to enable verification`);
       console.log(`⚠️ ${"=".repeat(50)}`);
       isVerified = true;
-    }
-    // ✅ PRODUCTION MODE: Verify signature
-    else {
+    } else {
       console.log(`🔒 PRODUCTION MODE: Verifying signature...`);
 
       const secretKey = process.env[`${platform.toUpperCase()}_SECRET_KEY`];
@@ -406,15 +455,23 @@ router.post("/ipn", async (req, res) => {
 
     // ============================================================
     // 🔄 HANDLE REFUND / CHARGEBACK
+    // Removes ONLY the refunded plan. Deactivates account only
+    // if the user has NO plans left (i.e. refunded everything,
+    // including plan 1).
     // ============================================================
     const isRefund =
       transactionType === "RFND" ||
       transactionType === "REFUND" ||
       transactionType === "refund" ||
-      (platform === "launchpad" && rawData.refund_status === "refunded");
+      // LaunchPad-specific: action=REFUND OR status=refunded
+      (platform === "launchpad" &&
+        (String(rawData.action).toUpperCase() === "REFUND" ||
+          String(rawData.status).toLowerCase() === "refunded" ||
+          rawData.refund_status === "refunded"));
 
     if (isRefund) {
       console.log(`🔄 Processing REFUND for transaction: ${transactionId}`);
+      console.log(`   📦 Refunded product ID: ${productId}`);
 
       const user = await User.findOne({ email: email });
       if (!user) {
@@ -422,6 +479,25 @@ router.post("/ipn", async (req, res) => {
         return res.status(200).send("OK");
       }
 
+      // 1) Find which plan was refunded (by product ID)
+      const planInfo = await getPlanByProductId(productId, platform);
+      const refundedPlanId = planInfo?.planId;
+
+      if (!refundedPlanId) {
+        console.log(
+          "⚠️ Could not resolve refunded product to a plan ID — skipping plan removal",
+        );
+        return res.status(200).json({
+          success: true,
+          message: "Refund received but plan could not be resolved",
+        });
+      }
+
+      console.log(
+        `🎯 Refunded plan resolved to planId=${refundedPlanId} (${planInfo.planName})`,
+      );
+
+      // 2) Mark matching payment record as refunded
       const payment = await Payment.findOne({
         transactionId: transactionId,
         userId: user._id,
@@ -432,20 +508,53 @@ router.post("/ipn", async (req, res) => {
         payment.refundDate = new Date();
         payment.ipnData = data;
         await payment.save();
-        console.log("✅ Payment record updated to refunded");
+        console.log(`✅ Payment ${transactionId} marked as refunded`);
+      } else {
+        // Fallback: match by user + purchased plan
+        const paymentByPlan = await Payment.findOne({
+          userId: user._id,
+          purchasedPlanId: refundedPlanId,
+          status: "completed",
+        }).sort({ paymentDate: -1 });
+
+        if (paymentByPlan) {
+          paymentByPlan.status = "refunded";
+          paymentByPlan.refundDate = new Date();
+          paymentByPlan.ipnData = data;
+          await paymentByPlan.save();
+          console.log(
+            `✅ Payment by plan (${refundedPlanId}) marked as refunded`,
+          );
+        } else {
+          console.log("⚠️ No matching payment record found to mark refunded");
+        }
       }
 
-      await Payment.deleteMany({ userId: user._id });
-      console.log("✅ Deleted all payment records for user");
+      // 3) Remove ONLY that plan from the user
+      const { deactivated, remainingPlans } = await removePlanFromUser(
+        user,
+        refundedPlanId,
+      );
 
-      console.log(`🗑️ Deleting user account due to refund: ${user.email}`);
-      await User.findByIdAndDelete(user._id);
-      console.log("✅ User deleted due to refund");
+      await user.save();
+      console.log(`💾 User saved: ${user.email}`);
+
+      // 4) Respond
+      if (deactivated) {
+        return res.status(200).json({
+          success: true,
+          message:
+            "Refund processed. All plans refunded — account deactivated.",
+          accountDeactivated: true,
+          remainingPlans: [],
+        });
+      }
 
       return res.status(200).json({
         success: true,
-        message: "Refund processed",
-        accountDeleted: true,
+        message: `Refund processed. Removed plan ${refundedPlanId}.`,
+        accountDeactivated: false,
+        remainingPlans,
       });
     }
 
@@ -459,7 +568,6 @@ router.post("/ipn", async (req, res) => {
       if (user) {
         const planInfo = await getPlanByProductId(productId, platform);
         if (planInfo && planInfo.plan) {
-          // ✅ Add to plans array if not exists
           if (!user.planId.includes(planInfo.planId)) {
             user.planId.push(planInfo.planId);
           }
@@ -484,8 +592,7 @@ router.post("/ipn", async (req, res) => {
 
       const user = await User.findOne({ email: email });
       if (user) {
-        // ✅ Keep plans but set current to Free
-        user.planId = [1]; // Reset to Free
+        user.planId = [1];
         user.planName = "Free";
         user.isActive = true;
         await user.save();
@@ -534,7 +641,7 @@ router.post("/ipn", async (req, res) => {
     console.log(`   🏷️ Platform: ${platform}`);
 
     // ============================================================
-    // 👤 CREATE OR UPDATE USER - WITH EMAIL FIX
+    // 👤 CREATE OR UPDATE USER
     // ============================================================
 
     let user = await User.findOne({ email: email });
@@ -542,13 +649,10 @@ router.post("/ipn", async (req, res) => {
     const defaultPassword = email;
 
     if (!user) {
-      // ✅ NEW USER
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(defaultPassword, salt);
-
       console.log("🔑 Password hashed successfully");
 
-      // ✅ Only add plan 1 once, then add the purchased plan
       const initialPlans = [1];
       if (planInfo.planId !== 1) {
         initialPlans.push(planInfo.planId);
@@ -571,14 +675,10 @@ router.post("/ipn", async (req, res) => {
       console.log(`✅ New user created: ${user.email}`);
       console.log(`   📋 All Plans: [${user.planId.join(", ")}]`);
 
-      // ✅ SEND WELCOME EMAIL WITH BETTER ERROR HANDLING
       try {
         console.log(`📧 Attempting to send welcome email to: ${user.email}`);
-
-        // Check if email service is available
         if (sendWelcomeEmail) {
           const emailResult = await sendWelcomeEmail(user, defaultPassword);
-
           if (emailResult === true) {
             console.log(`✅ Welcome email sent successfully to: ${user.email}`);
           } else {
@@ -595,10 +695,8 @@ router.post("/ipn", async (req, res) => {
           `❌ Failed to send welcome email to ${user.email}:`,
           emailError.message,
         );
-        // Don't fail the whole registration if email fails
       }
     } else {
-      // ✅ EXISTING USER
       const newPlanId = planInfo.planId;
 
       if (!Array.isArray(user.planId)) {
@@ -659,7 +757,7 @@ router.post("/ipn", async (req, res) => {
         email: user.email,
         name: user.name,
         role: user.role,
-        planId: user.planId, // ✅ Array of all plans
+        planId: user.planId,
         planName: user.planName,
       },
       process.env.JWT_SECRET || "your_jwt_secret_here",
@@ -679,7 +777,7 @@ router.post("/ipn", async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        planId: user.planId, // ✅ Array of all plans
+        planId: user.planId,
         planName: user.planName,
       },
       purchasedProduct: {
@@ -758,7 +856,6 @@ router.get("/verify-payment/:email", async (req, res) => {
       });
     }
 
-    // ✅ Check if user has any plan higher than 1
     const userPlans = user.planId || [1];
     const hasAccess = userPlans.some((id) => id > 1) && user.isActive === true;
 
@@ -769,7 +866,7 @@ router.get("/verify-payment/:email", async (req, res) => {
         name: user.name,
         email: user.email,
         planName: user.planName,
-        planId: user.planId, // ✅ Array of all plans
+        planId: user.planId,
         isActive: user.isActive,
       },
     });
