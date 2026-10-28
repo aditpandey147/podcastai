@@ -488,3 +488,144 @@ exports.bulkDeleteVideos = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
+exports.mergeVideos = async (req, res) => {
+  const { spawn } = require("child_process");
+
+  try {
+    const userId = getUserId(req);
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Not authenticated" });
+    }
+
+    const { videoIds } = req.body;
+
+    if (!Array.isArray(videoIds) || videoIds.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Select at least 2 videos to merge",
+      });
+    }
+
+    const videos = await Video.find({
+      id: { $in: videoIds },
+      userId,
+    });
+
+    if (videos.length !== videoIds.length) {
+      return res.status(404).json({
+        success: false,
+        message: "One or more videos not found",
+      });
+    }
+
+    // Preserve order the client sent
+    const ordered = videoIds
+      .map((id) => videos.find((v) => v.id === id))
+      .filter(Boolean);
+
+    const inputPaths = [];
+    for (const v of ordered) {
+      if (!v.localVideoUrl) {
+        return res.status(400).json({
+          success: false,
+          message: `Video "${v.title}" has no local file — cannot merge`,
+        });
+      }
+      const rel = v.localVideoUrl.replace(/^\/+/, "");
+      const abs = path.join(__dirname, "..", rel);
+
+      if (!fs.existsSync(abs)) {
+        return res.status(404).json({
+          success: false,
+          message: `File missing on disk: ${path.basename(abs)}`,
+        });
+      }
+      inputPaths.push(abs);
+    }
+
+    console.log(`🎬 Merging ${inputPaths.length} videos for user ${userId}`);
+
+    const inputs = inputPaths.flatMap((p) => ["-i", p]);
+    const filter =
+      inputPaths.map((_, i) => `[${i}:v]`).join("") +
+      `concat=n=${inputPaths.length}:v=1:a=0[outv]`;
+
+    const args = [
+      ...inputs,
+      "-filter_complex",
+      filter,
+      "-map",
+      "[outv]",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "23",
+      "-pix_fmt",
+      "yuv420p",
+      "-movflags",
+      "frag_keyframe+empty_moov+default_base_moof",
+      "-f",
+      "mp4",
+      "pipe:1",
+    ];
+
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="merged-${Date.now()}.mp4"`
+    );
+    res.setHeader("Cache-Control", "no-store");
+
+    const ff = spawn("ffmpeg", args);
+    ff.stdout.pipe(res);
+
+    ff.stderr.on("data", (data) => {
+      const text = data.toString();
+      if (text.includes("frame=") || text.includes("error")) {
+        process.stdout.write(`[ffmpeg] ${text}`);
+      }
+    });
+
+    ff.on("error", (err) => {
+      console.error("❌ FFmpeg spawn error:", err.message);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: "FFmpeg not installed or failed to start",
+        });
+      } else {
+        res.end();
+      }
+    });
+
+    ff.on("close", (code) => {
+      if (code === 0) {
+        console.log(`✅ Merge streamed to client`);
+      } else {
+        console.error(`❌ FFmpeg exited with code ${code}`);
+      }
+      if (!res.writableEnded) res.end();
+    });
+
+    req.on("close", () => {
+      if (!ff.killed) {
+        console.log("🔌 Client disconnected — killing FFmpeg");
+        ff.kill("SIGKILL");
+      }
+    });
+  } catch (err) {
+    console.error("mergeVideos error:", err.message);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: err.message });
+    } else {
+      res.end();
+    }
+  }
+};
