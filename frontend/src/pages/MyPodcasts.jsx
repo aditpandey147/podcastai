@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Play,
+  Pause,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -13,6 +14,9 @@ import {
   X,
   Trash2,
   AlertTriangle,
+  Layers,
+  Check,
+  Sparkles,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -34,40 +38,16 @@ const getImageUrl = (path) => {
 // ================================================================
 function StatusBadge({ status }) {
   const map = {
-    queued: {
-      color: "#f59e0b",
-      bg: "rgba(245,158,11,.15)",
-      border: "rgba(245,158,11,.35)",
-      label: "Queued",
-    },
-    processing: {
-      color: "#3b82f6",
-      bg: "rgba(59,130,246,.15)",
-      border: "rgba(59,130,246,.35)",
-      label: "Processing",
-    },
-    completed: {
-      color: "#0ce4bd",
-      bg: "rgba(12,228,189,.15)",
-      border: "rgba(12,228,189,.35)",
-      label: "Completed",
-    },
-    failed: {
-      color: "#f87171",
-      bg: "rgba(248,113,113,.15)",
-      border: "rgba(248,113,113,.35)",
-      label: "Failed",
-    },
+    queued: { color: "#f59e0b", bg: "rgba(245,158,11,.15)", border: "rgba(245,158,11,.35)", label: "Queued" },
+    processing: { color: "#3b82f6", bg: "rgba(59,130,246,.15)", border: "rgba(59,130,246,.35)", label: "Processing" },
+    completed: { color: "#0ce4bd", bg: "rgba(12,228,189,.15)", border: "rgba(12,228,189,.35)", label: "Completed" },
+    failed: { color: "#f87171", bg: "rgba(248,113,113,.15)", border: "rgba(248,113,113,.35)", label: "Failed" },
   };
   const s = map[status] || map.queued;
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-[4px] rounded-full text-[10.5px] font-semibold"
-      style={{
-        background: s.bg,
-        border: `1px solid ${s.border}`,
-        color: s.color,
-      }}
+      style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color }}
     >
       {status === "processing" && <Loader2 size={11} className="animate-spin" />}
       {status === "completed" && <CheckCircle2 size={11} />}
@@ -82,51 +62,34 @@ function StatusBadge({ status }) {
 // VIDEO MODAL
 // ================================================================
 function VideoModal({ video, onClose }) {
-  const modalRef = useRef(null);
-
   useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
+    const handleKey = (e) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
-
-  useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = prev;
     };
-  }, []);
+  }, [onClose]);
 
   if (!video) return null;
-
   const playableUrl = video.localVideoUrl || video.videoUrl;
 
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-      style={{
-        background: "rgba(2,7,19,.92)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      style={{ background: "rgba(2,7,19,.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        ref={modalRef}
         className="relative w-full max-w-[960px] rounded-[16px] overflow-hidden"
         style={{
           background: "linear-gradient(180deg, #06162b, #041124)",
           border: "1px solid rgba(150,120,255,.35)",
-          boxShadow:
-            "0 24px 90px rgba(0,0,0,.7), 0 0 40px rgba(141,67,255,.15)",
+          boxShadow: "0 24px 90px rgba(0,0,0,.7), 0 0 40px rgba(141,67,255,.15)",
         }}
       >
-        {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-3.5"
           style={{ borderBottom: "1px solid rgba(58,91,132,.35)" }}
@@ -134,66 +97,48 @@ function VideoModal({ video, onClose }) {
           <div className="flex items-center gap-2.5 min-w-0">
             <div
               className="grid place-items-center w-7 h-7 rounded-[8px] shrink-0"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(110,53,237,.35), rgba(52,131,255,.35))",
-                border: "1px solid rgba(150,120,255,.5)",
-              }}
+              style={{ background: "linear-gradient(135deg, rgba(110,53,237,.35), rgba(52,131,255,.35))", border: "1px solid rgba(150,120,255,.5)" }}
             >
               <Play size={12} fill="white" className="text-white ml-[1px]" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-[13.5px] font-semibold text-[#edf4ff] truncate">
-                {video.title}
-              </h3>
-              <p className="text-[10.5px] text-[#9c8bff] truncate">
-                {video.category || "Podcast"}
-              </p>
+              <h3 className="text-[13.5px] font-semibold text-[#edf4ff] truncate">{video.title}</h3>
+              <p className="text-[10.5px] text-[#9c8bff] truncate">{video.category || "Podcast"}</p>
             </div>
           </div>
-
           <button
             onClick={onClose}
             className="grid place-items-center w-8 h-8 rounded-full text-[#b7c9df] transition-colors hover:bg-[#0a1a32] shrink-0 ml-3"
-            aria-label="Close"
           >
             <X size={16} />
           </button>
         </div>
-
-        {/* Video */}
         <div className="aspect-video bg-[#020713]">
           <video
+            key={playableUrl}
             src={getImageUrl(playableUrl)}
             poster={getImageUrl(video.coverImage)}
             controls
             autoPlay
+            playsInline
             className="w-full h-full object-contain bg-black"
           />
         </div>
-
-        {/* Footer */}
         <div className="flex items-center justify-between px-5 py-3.5 flex-wrap gap-3">
           <span className="text-[10.5px] text-[#5f7391]">
             {new Date(video.createdAt).toLocaleString()}
           </span>
-
-          <div className="flex items-center gap-2">
-            <a
-              href={getImageUrl(playableUrl)}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
-              className="h-[34px] px-4 rounded-[9px] flex items-center gap-2 text-[12px] font-semibold text-white transition-all hover:brightness-110"
-              style={{
-                background: "linear-gradient(100deg, #6e35ed, #3483ff)",
-                boxShadow: "0 6px 18px rgba(58,90,255,.3)",
-              }}
-            >
-              <Download size={13} />
-              Download
-            </a>
-          </div>
+          <a
+            href={getImageUrl(playableUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
+            className="h-[34px] px-4 rounded-[9px] flex items-center gap-2 text-[12px] font-semibold text-white transition-all hover:brightness-110"
+            style={{ background: "linear-gradient(100deg, #6e35ed, #3483ff)", boxShadow: "0 6px 18px rgba(58,90,255,.3)" }}
+          >
+            <Download size={13} />
+            Download
+          </a>
         </div>
       </div>
     </div>
@@ -201,110 +146,59 @@ function VideoModal({ video, onClose }) {
 }
 
 // ================================================================
-// DELETE CONFIRMATION MODAL
+// DELETE MODAL
 // ================================================================
 function DeleteModal({ video, onClose, onConfirm, deleting }) {
   useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === "Escape" && !deleting) onClose();
-    };
+    const handleKey = (e) => e.key === "Escape" && !deleting && onClose();
     document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose, deleting]);
-
-  useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
+      document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = prev;
     };
-  }, []);
+  }, [onClose, deleting]);
 
   if (!video) return null;
 
   return (
     <div
       className="fixed inset-0 z-[300] flex items-center justify-center p-4"
-      style={{
-        background: "rgba(2,7,19,.92)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !deleting) onClose();
-      }}
+      style={{ background: "rgba(2,7,19,.92)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+      onClick={(e) => e.target === e.currentTarget && !deleting && onClose()}
     >
       <div
         className="relative w-full max-w-[460px] rounded-[16px] overflow-hidden"
-        style={{
-          background: "linear-gradient(180deg, #0e0a1f, #06111f)",
-          border: "1px solid rgba(248,113,113,.35)",
-          boxShadow:
-            "0 24px 90px rgba(0,0,0,.75), 0 0 60px rgba(248,113,113,.15)",
-        }}
+        style={{ background: "linear-gradient(180deg, #0e0a1f, #06111f)", border: "1px solid rgba(248,113,113,.35)", boxShadow: "0 24px 90px rgba(0,0,0,.75), 0 0 60px rgba(248,113,113,.15)" }}
       >
-        {/* Subtle red glow at top */}
-        <div
-          className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-48 rounded-full blur-3xl pointer-events-none"
-          style={{ background: "rgba(248,113,113,.18)" }}
-        />
-
-        {/* Header */}
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-48 rounded-full blur-3xl pointer-events-none" style={{ background: "rgba(248,113,113,.18)" }} />
         <div className="relative px-5 pt-5 pb-4 flex items-start gap-3.5">
           <div
             className="grid place-items-center w-11 h-11 rounded-[12px] shrink-0"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(248,113,113,.25), rgba(248,113,113,.1))",
-              border: "1px solid rgba(248,113,113,.45)",
-              boxShadow: "0 0 24px rgba(248,113,113,.25)",
-            }}
+            style={{ background: "linear-gradient(135deg, rgba(248,113,113,.25), rgba(248,113,113,.1))", border: "1px solid rgba(248,113,113,.45)", boxShadow: "0 0 24px rgba(248,113,113,.25)" }}
           >
             <AlertTriangle size={20} className="text-[#fca5a5]" />
           </div>
-
           <div className="min-w-0 flex-1">
-            <h3 className="text-[16px] font-semibold text-[#edf4ff] leading-tight">
-              Delete this video?
-            </h3>
+            <h3 className="text-[16px] font-semibold text-[#edf4ff] leading-tight">Delete this video?</h3>
             <p className="text-[12px] text-[#8fa0ba] mt-1 leading-[1.5]">
-              This action cannot be undone. The video file and all data will be
-              permanently removed from your library.
+              This action cannot be undone. The video file and all data will be permanently removed from your library.
             </p>
           </div>
-
           <button
             onClick={onClose}
             disabled={deleting}
             className="grid place-items-center w-7 h-7 rounded-full text-[#b7c9df] transition-colors hover:bg-[#0a1a32] shrink-0 disabled:opacity-40"
-            aria-label="Close"
           >
             <X size={14} />
           </button>
         </div>
-
-        {/* Video preview chip */}
         <div className="relative px-5 pb-4">
-          <div
-            className="flex items-center gap-3 rounded-[10px] p-2.5"
-            style={{
-              background: "rgba(6,20,42,.7)",
-              border: "1px solid rgba(80,150,255,.15)",
-            }}
-          >
-            <div
-              className="w-12 h-12 rounded-[8px] overflow-hidden shrink-0"
-              style={{ background: "#02070c" }}
-            >
+          <div className="flex items-center gap-3 rounded-[10px] p-2.5" style={{ background: "rgba(6,20,42,.7)", border: "1px solid rgba(80,150,255,.15)" }}>
+            <div className="w-12 h-12 rounded-[8px] overflow-hidden shrink-0" style={{ background: "#02070c" }}>
               {video.coverImage ? (
-                <img
-                  src={getImageUrl(video.coverImage)}
-                  alt={video.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                  }}
-                />
+                <img src={getImageUrl(video.coverImage)} alt={video.title} className="w-full h-full object-cover" onError={(e) => (e.target.style.display = "none")} />
               ) : (
                 <div className="w-full h-full grid place-items-center">
                   <Film size={16} className="text-[#5f7391]" />
@@ -312,43 +206,27 @@ function DeleteModal({ video, onClose, onConfirm, deleting }) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[12.5px] font-medium text-[#eaf1ff] truncate">
-                {video.title}
-              </div>
+              <div className="text-[12.5px] font-medium text-[#eaf1ff] truncate">{video.title}</div>
               <div className="text-[10.5px] text-[#7d90ac] mt-0.5 truncate">
-                {video.category || "Podcast"} •{" "}
-                {new Date(video.createdAt).toLocaleDateString()}
+                {video.category || "Podcast"} • {new Date(video.createdAt).toLocaleDateString()}
               </div>
             </div>
           </div>
         </div>
-
-        {/* Actions */}
-        <div
-          className="relative flex items-center justify-end gap-2.5 px-5 py-4"
-          style={{ borderTop: "1px solid rgba(58,91,132,.25)" }}
-        >
+        <div className="relative flex items-center justify-end gap-2.5 px-5 py-4" style={{ borderTop: "1px solid rgba(58,91,132,.25)" }}>
           <button
             onClick={onClose}
             disabled={deleting}
             className="h-[40px] px-5 rounded-[10px] text-[12.5px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952] disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              border: "1px solid #1d568e",
-              background: "#061b37",
-            }}
+            style={{ border: "1px solid #1d568e", background: "#061b37" }}
           >
             Cancel
           </button>
-
           <button
             onClick={onConfirm}
             disabled={deleting}
             className="h-[40px] px-5 rounded-[10px] text-[12.5px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{
-              background:
-                "linear-gradient(100deg, #dc2626, #ef4444)",
-              boxShadow: "0 6px 18px rgba(239,68,68,.4)",
-            }}
+            style={{ background: "linear-gradient(100deg, #dc2626, #ef4444)", boxShadow: "0 6px 18px rgba(239,68,68,.4)" }}
           >
             {deleting ? (
               <>
@@ -369,6 +247,275 @@ function DeleteModal({ video, onClose, onConfirm, deleting }) {
 }
 
 // ================================================================
+// BUILD PROGRESS MODAL
+// ================================================================
+function BuildProgressModal({ count }) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+      style={{ background: "rgba(2,7,19,.94)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}
+    >
+      <div className="text-center px-6 max-w-[440px]">
+        <div className="relative mx-auto mb-6" style={{ width: 140, height: 100 }}>
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="absolute left-1/2 top-1/2 rounded-lg"
+              style={{
+                width: 90,
+                height: 60,
+                transform: `translate(-50%, -50%) translateX(${(i - 1) * 30}px) rotate(${(i - 1) * 4}deg)`,
+                background: "linear-gradient(135deg, #1a1145, #0d2a5c)",
+                border: "1px solid rgba(141,67,255,.5)",
+                boxShadow: "0 8px 20px rgba(0,0,0,.4)",
+                animation: `buildSlide${i} 1.6s ease-in-out infinite`,
+                animationDelay: `${i * 0.2}s`,
+              }}
+            />
+          ))}
+          <div
+            className="absolute left-1/2 top-1/2 rounded-lg grid place-items-center"
+            style={{
+              width: 90,
+              height: 60,
+              transform: "translate(-50%, -50%)",
+              background: "linear-gradient(135deg, #6e35ed, #3483ff)",
+              border: "1px solid rgba(255,255,255,.35)",
+              boxShadow: "0 0 32px rgba(108,54,237,.6)",
+              zIndex: 10,
+            }}
+          >
+            <Loader2 size={22} className="text-white animate-spin" />
+          </div>
+        </div>
+
+        <h3 className="text-[18px] font-semibold text-[#eef4ff] mb-2">
+          Building Your Full Podcast
+        </h3>
+        <p className="text-[13px] text-[#9bb0ca] leading-[1.6]">
+          Combining {count} clips into one seamless episode. The download starts automatically when ready.
+        </p>
+
+        <div className="mt-6 h-[3px] rounded-full overflow-hidden" style={{ background: "rgba(58,91,132,.4)" }}>
+          <div
+            className="h-full rounded-full"
+            style={{
+              background: "linear-gradient(90deg, #8d43ff, #3483ff, #8d43ff)",
+              backgroundSize: "200% 100%",
+              animation: "buildShimmer 2s linear infinite",
+              width: "100%",
+            }}
+          />
+        </div>
+
+        <style>{`
+          @keyframes buildShimmer {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+          }
+          @keyframes buildSlide0 {
+            0%, 100% { transform: translate(-50%, -50%) translateX(-30px) rotate(-4deg); opacity: .6; }
+            50% { transform: translate(-50%, -50%) translateX(-10px) rotate(-2deg); opacity: 1; }
+          }
+          @keyframes buildSlide1 {
+            0%, 100% { transform: translate(-50%, -50%) translateX(0px) rotate(0deg); opacity: 1; }
+            50% { transform: translate(-50%, -50%) translateX(0px) rotate(0deg); opacity: 1; }
+          }
+          @keyframes buildSlide2 {
+            0%, 100% { transform: translate(-50%, -50%) translateX(30px) rotate(4deg); opacity: .6; }
+            50% { transform: translate(-50%, -50%) translateX(10px) rotate(2deg); opacity: 1; }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// FULL PODCAST PREVIEW MODAL (autoplay + play button)
+// ================================================================
+function FullPodcastModal({ blobUrl, videoCount, onClose, onRedownload }) {
+  const videoRef = useRef(null);
+  const [playing, setPlaying] = useState(true);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const vid = videoRef.current;
+    if (vid) {
+      vid.play().catch(() => setPlaying(false));
+    }
+
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (e) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  if (!blobUrl) return null;
+
+  const togglePlay = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (vid.paused) {
+      vid.play();
+      setPlaying(true);
+    } else {
+      vid.pause();
+      setPlaying(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+      style={{ background: "rgba(2,7,19,.94)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div
+        className="relative w-full max-w-[960px] rounded-[16px] overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #06162b, #041124)",
+          border: "1px solid rgba(12,228,189,.4)",
+          boxShadow: "0 24px 90px rgba(0,0,0,.8), 0 0 60px rgba(12,228,189,.15)",
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-5 py-3.5"
+          style={{ borderBottom: "1px solid rgba(58,91,132,.35)" }}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div
+              className="grid place-items-center w-7 h-7 rounded-[8px] shrink-0"
+              style={{ background: "linear-gradient(135deg, rgba(12,228,189,.35), rgba(52,131,255,.35))", border: "1px solid rgba(12,228,189,.5)" }}
+            >
+              <Sparkles size={12} className="text-[#0ce4bd]" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-[13.5px] font-semibold text-[#edf4ff]">
+                Your Full Podcast Is Ready
+              </h3>
+              <p className="text-[10.5px] text-[#0ce4bd]">
+                {videoCount} clips combined • downloading automatically
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid place-items-center w-8 h-8 rounded-full text-[#b7c9df] transition-colors hover:bg-[#0a1a32] shrink-0 ml-3"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Video */}
+        <div className="relative aspect-video bg-black group">
+          <video
+            ref={videoRef}
+            src={blobUrl}
+            autoPlay
+            playsInline
+            controls={false}
+            className="w-full h-full object-contain"
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+          />
+
+          <button
+            type="button"
+            onClick={togglePlay}
+            className="absolute inset-0 grid place-items-center z-10 cursor-pointer"
+            aria-label={playing ? "Pause video" : "Play video"}
+          >
+            <span
+              className="grid place-items-center w-[76px] h-[76px] rounded-full transition-all duration-300 hover:scale-110"
+              style={{
+                background: playing
+                  ? "rgba(2,7,19,.45)"
+                  : "linear-gradient(135deg, rgba(110,53,237,.95), rgba(52,131,255,.95))",
+                border: "2px solid rgba(255,255,255,.35)",
+                boxShadow: "0 12px 40px rgba(58,90,255,.55), 0 0 0 6px rgba(110,53,237,.15)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                opacity: playing ? 0 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (playing) e.currentTarget.style.opacity = "0.85";
+              }}
+              onMouseLeave={(e) => {
+                if (playing) e.currentTarget.style.opacity = "0";
+              }}
+            >
+              {playing ? (
+                <Pause size={28} fill="white" className="text-white" />
+              ) : (
+                <Play size={28} fill="white" className="text-white ml-[3px]" />
+              )}
+            </span>
+          </button>
+
+          <div
+            className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center gap-3 z-20"
+            style={{ background: "linear-gradient(180deg, transparent, rgba(2,7,19,.85))" }}
+          >
+            <button
+              onClick={togglePlay}
+              className="grid place-items-center w-9 h-9 rounded-full text-white transition-all hover:bg-[rgba(255,255,255,.15)]"
+              aria-label={playing ? "Pause" : "Play"}
+            >
+              {playing ? <Pause size={16} fill="white" /> : <Play size={16} fill="white" />}
+            </button>
+            <span className="text-[11px] text-[#cbd8ec] font-medium">
+              {playing ? "Playing…" : "Paused"}
+            </span>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-5 py-3.5 flex-wrap gap-3">
+          <div className="flex items-center gap-2 text-[10.5px] text-[#5f7391]">
+            <CheckCircle2 size={11} className="text-[#0ce4bd]" />
+            Downloaded automatically
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onRedownload}
+              className="h-[34px] px-4 rounded-[9px] flex items-center gap-2 text-[12px] font-semibold text-white transition-all hover:brightness-110"
+              style={{ background: "linear-gradient(100deg, #6e35ed, #3483ff)", boxShadow: "0 6px 18px rgba(58,90,255,.3)" }}
+            >
+              <Download size={13} />
+              Download Again
+            </button>
+            <button
+              onClick={onClose}
+              className="h-[34px] px-4 rounded-[9px] text-[12px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952]"
+              style={{ border: "1px solid #1d568e", background: "#061b37" }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
 // PAGE
 // ================================================================
 export default function MyPodcasts() {
@@ -377,9 +524,15 @@ export default function MyPodcasts() {
   const [loading, setLoading] = useState(true);
   const [activeVideo, setActiveVideo] = useState(null);
 
-  // ---- Delete state ----
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  // ---- Selection / build state ----
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [building, setBuilding] = useState(false);
+  const [builtBlobUrl, setBuiltBlobUrl] = useState(null);
+  const [builtCount, setBuiltCount] = useState(0);
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -397,27 +550,21 @@ export default function MyPodcasts() {
     fetchVideos();
   }, [fetchVideos]);
 
-  // ---- Poll every 5s if any video is still processing/queued ----
   useEffect(() => {
-    const hasPending = videos.some(
-      (v) => v.status === "queued" || v.status === "processing"
-    );
+    const hasPending = videos.some((v) => v.status === "queued" || v.status === "processing");
     if (!hasPending) return;
-
     const interval = setInterval(fetchVideos, 5000);
     return () => clearInterval(interval);
   }, [videos, fetchVideos]);
 
-  // ---- Handle delete ----
+  // ---- Delete ----
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-
     setDeleting(true);
     try {
       const res = await api.delete(`/video/${deleteTarget.id}`);
       if (res.data?.success) {
         toast.success("Video deleted");
-        // Optimistically remove from local list
         setVideos((prev) => prev.filter((v) => v.id !== deleteTarget.id));
         setDeleteTarget(null);
       } else {
@@ -430,6 +577,99 @@ export default function MyPodcasts() {
       setDeleting(false);
     }
   };
+
+  // ---- Selection ----
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds([]);
+  };
+
+  // ---- Trigger browser download ----
+  const triggerDownload = (blobUrl, count) => {
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `full-podcast-${count}-clips-${Date.now()}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  // ---- Build full podcast + auto-download ----
+  const handleBuildFullPodcast = async () => {
+    if (selectedIds.length < 2) {
+      toast.error("Select at least 2 clips");
+      return;
+    }
+
+    const orderedIds = videos
+      .filter((v) => selectedIds.includes(v.id))
+      .map((v) => v.id);
+
+    const count = selectedIds.length;
+
+    setBuilding(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${SERVER_URL}/api/video/merge`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": token,
+        },
+        body: JSON.stringify({ videoIds: orderedIds }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Build failed (${res.status})`);
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      // 👇 Save blob URL + count for modal
+      setBuiltBlobUrl(url);
+      setBuiltCount(count);
+
+      // 👇 AUTO-DOWNLOAD immediately
+      triggerDownload(url, count);
+
+      setBuilding(false);
+      exitSelectMode();
+      toast.success("Full podcast downloaded!");
+    } catch (err) {
+      console.error("Build failed:", err);
+      toast.error(err.message || "Failed to build full podcast");
+      setBuilding(false);
+    }
+  };
+
+  const closeBuiltModal = () => {
+    if (builtBlobUrl) {
+      URL.revokeObjectURL(builtBlobUrl);
+    }
+    setBuiltBlobUrl(null);
+    setBuiltCount(0);
+  };
+
+  const handleRedownload = () => {
+    if (builtBlobUrl && builtCount) {
+      triggerDownload(builtBlobUrl, builtCount);
+      toast.success("Download started again");
+    }
+  };
+
+  const completedVideos = videos.filter(
+    (v) => v.status === "completed" && (v.localVideoUrl || v.videoUrl)
+  );
 
   return (
     <div
@@ -448,33 +688,19 @@ export default function MyPodcasts() {
 
         <main className="flex-1 px-3 md:px-[18px] py-4 md:py-5 overflow-y-auto">
           <div>
-            {/* ==========================================
-                TOP BANNER
-                ========================================== */}
+            {/* BANNER */}
             <div
               className="relative overflow-hidden rounded-[10px] border border-[#153c6d] mb-5"
-              style={{
-                background:
-                  "linear-gradient(105deg, #020b1b 0%, #03112b 52%, #040b20 100%)",
-              }}
+              style={{ background: "linear-gradient(105deg, #020b1b 0%, #03112b 52%, #040b20 100%)" }}
             >
               <div
                 className="absolute inset-y-0 right-0 w-[62%] md:w-[55%]"
-                style={{
-                  backgroundImage: `url(${bannerBg})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center right",
-                  backgroundRepeat: "no-repeat",
-                }}
+                style={{ backgroundImage: `url(${bannerBg})`, backgroundSize: "cover", backgroundPosition: "center right", backgroundRepeat: "no-repeat" }}
               />
               <div
                 className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #020b1a 0%, #020b1a 30%, rgba(3,17,43,.95) 45%, rgba(3,17,43,.6) 65%, rgba(3,17,43,.2) 82%, transparent 100%)",
-                }}
+                style={{ background: "linear-gradient(90deg, #020b1a 0%, #020b1a 30%, rgba(3,17,43,.95) 45%, rgba(3,17,43,.6) 65%, rgba(3,17,43,.2) 82%, transparent 100%)" }}
               />
-
               <div className="relative z-10 py-10 md:py-12 pl-7 pr-7 max-w-[720px]">
                 <div className="text-[13px] tracking-[1.8px] text-[#9c65ff] font-medium">
                   YOUR PODCAST LIBRARY
@@ -484,19 +710,13 @@ export default function MyPodcasts() {
                   <br />
                   <span
                     className="bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(90deg, #b65bff, #7855ff, #338dff)",
-                      WebkitBackgroundClip: "text",
-                    }}
+                    style={{ backgroundImage: "linear-gradient(90deg, #b65bff, #7855ff, #338dff)", WebkitBackgroundClip: "text" }}
                   >
                     All Your Videos In One Place.
                   </span>
                 </h1>
                 <p className="text-[14px] leading-[1.6] text-[#aebfd5] mt-4 max-w-[640px]">
-                  Browse, preview, and download every podcast video you&apos;ve
-                  generated. Videos processing in the background will appear
-                  here automatically.
+                  Browse, preview, build full episodes from your clips, and download every podcast video you&apos;ve generated.
                 </p>
               </div>
             </div>
@@ -506,10 +726,7 @@ export default function MyPodcasts() {
               <div className="flex items-center gap-2.5">
                 <div
                   className="grid place-items-center w-8 h-8 rounded-[9px] shrink-0"
-                  style={{
-                    background: "rgba(110,53,237,.2)",
-                    border: "1px solid rgba(150,120,255,.4)",
-                  }}
+                  style={{ background: "rgba(110,53,237,.2)", border: "1px solid rgba(150,120,255,.4)" }}
                 >
                   <Film size={14} className="text-[#a080ff]" />
                 </div>
@@ -520,54 +737,120 @@ export default function MyPodcasts() {
                   {!loading && (
                     <span
                       className="text-[11px] font-medium px-2.5 py-[4px] rounded-full text-[#9cb4d4]"
-                      style={{
-                        background: "rgba(255,255,255,.05)",
-                        border: "1px solid rgba(255,255,255,.08)",
-                      }}
+                      style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)" }}
                     >
                       {videos.length}
+                    </span>
+                  )}
+                  {selectMode && selectedIds.length > 0 && (
+                    <span
+                      className="text-[11px] font-semibold px-2.5 py-[4px] rounded-full"
+                      style={{ background: "rgba(141,67,255,.2)", border: "1px solid rgba(141,67,255,.5)", color: "#c9b5ff" }}
+                    >
+                      {selectedIds.length} selected
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={fetchVideos}
-                  className="h-[40px] px-3 rounded-[10px] text-[12px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952] flex items-center gap-2"
-                  style={{
-                    border: "1px solid #1d568e",
-                    background: "#061b37",
-                  }}
-                >
-                  <RefreshCw size={13} />
-                  Refresh
-                </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {selectMode ? (
+                  <>
+                    <button
+                      onClick={exitSelectMode}
+                      className="h-[40px] px-3 rounded-[10px] text-[12px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952]"
+                      style={{ border: "1px solid #1d568e", background: "#061b37" }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleBuildFullPodcast}
+                      disabled={selectedIds.length < 2 || building}
+                      className="h-[40px] px-4 rounded-[10px] text-[12px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center gap-2"
+                      style={{
+                        background: "linear-gradient(100deg, #8d43ff, #3483ff)",
+                        boxShadow: "0 6px 20px rgba(141,67,255,.4)",
+                      }}
+                    >
+                      <Layers size={14} />
+                      Build Full Episode ({selectedIds.length})
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {completedVideos.length >= 2 && (
+                      <button
+                        onClick={() => setSelectMode(true)}
+                        className="h-[40px] px-4 rounded-[10px] text-[12px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110 flex items-center gap-2"
+                        style={{
+                          background: "linear-gradient(100deg, #8d43ff, #3483ff)",
+                          boxShadow: "0 6px 20px rgba(141,67,255,.4)",
+                        }}
+                      >
+                        <Layers size={14} />
+                        Get Full Podcast
+                      </button>
+                    )}
 
-                <button
-                  onClick={() => navigate("/create-podcast")}
-                  className="h-[40px] px-4 rounded-[10px] text-[12px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110"
-                  style={{
-                    background: "linear-gradient(100deg, #6e35ed, #3483ff)",
-                    boxShadow: "0 6px 20px rgba(58,90,255,.3)",
-                  }}
-                >
-                  + Create New
-                </button>
+                    <button
+                      onClick={fetchVideos}
+                      className="h-[40px] px-3 rounded-[10px] text-[12px] font-medium text-[#dbe7f7] transition-all hover:bg-[#0a2952] flex items-center gap-2"
+                      style={{ border: "1px solid #1d568e", background: "#061b37" }}
+                    >
+                      <RefreshCw size={13} />
+                      Refresh
+                    </button>
+
+                    <button
+                      onClick={() => navigate("/create-podcast")}
+                      className="h-[40px] px-4 rounded-[10px] text-[12px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110"
+                      style={{ background: "linear-gradient(100deg, #6e35ed, #3483ff)", boxShadow: "0 6px 20px rgba(58,90,255,.3)" }}
+                    >
+                      + Create New
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* LOADING / EMPTY / GRID */}
+            {/* Hint banner during selection */}
+            {selectMode && (
+              <div
+                className="rounded-[12px] p-3.5 mb-4 flex items-center gap-3"
+                style={{
+                  background: "linear-gradient(90deg, rgba(141,67,255,.15), rgba(52,131,255,.1))",
+                  border: "1px solid rgba(141,67,255,.4)",
+                }}
+              >
+                <div
+                  className="grid place-items-center w-9 h-9 rounded-[9px] shrink-0"
+                  style={{
+                    background: "rgba(141,67,255,.25)",
+                    border: "1px solid rgba(141,67,255,.5)",
+                  }}
+                >
+                  <Layers size={16} className="text-[#c9b5ff]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-semibold text-[#edf4ff]">
+                    Build a Full Episode
+                  </div>
+                  <div className="text-[11px] text-[#9bb0ca] mt-0.5">
+                    Click any video to select. Pick 2+ clips, then hit{" "}
+                    <b className="text-[#c9b5ff]">Build Full Episode</b> — the download starts automatically.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CONTENT */}
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
                   <div
                     key={i}
                     className="h-[240px] rounded-[12px] animate-pulse"
-                    style={{
-                      background: "linear-gradient(180deg, #06162b, #041124)",
-                      border: "1px solid #17385f",
-                    }}
+                    style={{ background: "linear-gradient(180deg, #06162b, #041124)", border: "1px solid #17385f" }}
                   />
                 ))}
               </div>
@@ -576,34 +859,23 @@ export default function MyPodcasts() {
                 className="rounded-[14px] p-12 text-center flex flex-col items-center gap-3"
                 style={{
                   border: "1px solid rgba(255,255,255,.07)",
-                  background:
-                    "linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0))",
+                  background: "linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0))",
                 }}
               >
                 <div
                   className="grid place-items-center w-14 h-14 rounded-full"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(123,47,247,.18), rgba(52,131,255,.18))",
-                    border: "1px solid rgba(150,120,255,.3)",
-                  }}
+                  style={{ background: "linear-gradient(135deg, rgba(123,47,247,.18), rgba(52,131,255,.18))", border: "1px solid rgba(150,120,255,.3)" }}
                 >
                   <Film size={22} className="text-[#a98bff]" />
                 </div>
-                <p className="text-[15px] font-medium text-[#dbe6f7]">
-                  No podcasts yet
-                </p>
+                <p className="text-[15px] font-medium text-[#dbe6f7]">No podcasts yet</p>
                 <p className="text-[12.5px] text-[#7d90ac] max-w-[380px]">
-                  Generate your first podcast video from a template to see it
-                  here.
+                  Generate your first podcast video from a template to see it here.
                 </p>
                 <button
                   onClick={() => navigate("/templates")}
                   className="mt-2 h-[40px] px-5 rounded-[10px] text-[12.5px] font-semibold text-white transition-all hover:-translate-y-[1px] hover:brightness-110"
-                  style={{
-                    background: "linear-gradient(100deg, #6e35ed, #3483ff)",
-                    boxShadow: "0 6px 20px rgba(58,90,255,.3)",
-                  }}
+                  style={{ background: "linear-gradient(100deg, #6e35ed, #3483ff)", boxShadow: "0 6px 20px rgba(58,90,255,.3)" }}
                 >
                   Browse Templates
                 </button>
@@ -614,6 +886,9 @@ export default function MyPodcasts() {
                   <VideoCard
                     key={v.id}
                     video={v}
+                    selectMode={selectMode}
+                    selected={selectedIds.includes(v.id)}
+                    onToggleSelect={() => toggleSelect(v.id)}
                     onPlay={() => setActiveVideo(v)}
                     onDelete={() => setDeleteTarget(v)}
                   />
@@ -625,12 +900,7 @@ export default function MyPodcasts() {
       </div>
 
       {/* MODALS */}
-      {activeVideo && (
-        <VideoModal
-          video={activeVideo}
-          onClose={() => setActiveVideo(null)}
-        />
-      )}
+      {activeVideo && <VideoModal video={activeVideo} onClose={() => setActiveVideo(null)} />}
 
       {deleteTarget && (
         <DeleteModal
@@ -640,82 +910,120 @@ export default function MyPodcasts() {
           onConfirm={handleDeleteConfirm}
         />
       )}
+
+      {building && <BuildProgressModal count={selectedIds.length} />}
+
+      {builtBlobUrl && (
+        <FullPodcastModal
+          blobUrl={builtBlobUrl}
+          videoCount={builtCount}
+          onClose={closeBuiltModal}
+          onRedownload={handleRedownload}
+        />
+      )}
     </div>
   );
 }
 
 // ================================================================
-// VIDEO CARD
+// VIDEO CARD (selection in select mode)
 // ================================================================
-function VideoCard({ video, onPlay, onDelete }) {
-  const isProcessing =
-    video.status === "queued" || video.status === "processing";
+function VideoCard({
+  video,
+  selectMode,
+  selected,
+  onToggleSelect,
+  onPlay,
+  onDelete,
+}) {
+  const isProcessing = video.status === "queued" || video.status === "processing";
   const isCompleted = video.status === "completed";
   const isFailed = video.status === "failed";
-
+  const isCompletedWithUrl = isCompleted && (video.localVideoUrl || video.videoUrl);
   const playableUrl = video.localVideoUrl || video.videoUrl;
 
-  const handlePlayClick = (e) => {
-    e.stopPropagation();
-    onPlay();
-  };
-
-  const handleDeleteClick = (e) => {
-    e.stopPropagation();
-    onDelete();
+  const handleCardClick = () => {
+    if (selectMode && isCompletedWithUrl) {
+      onToggleSelect();
+    }
   };
 
   return (
     <div
-      className="rounded-[12px] overflow-hidden transition-all duration-300 hover:-translate-y-[2px] group"
+      onClick={handleCardClick}
+      className={`rounded-[12px] overflow-hidden transition-all duration-300 group relative ${
+        selectMode && isCompletedWithUrl ? "cursor-pointer" : ""
+      } hover:-translate-y-[2px]`}
       style={{
         background: "linear-gradient(180deg, #06162b, #041124)",
-        border: "1px solid #17385f",
-        boxShadow: "0 4px 20px rgba(0,0,0,.3)",
+        border: selected ? "2px solid #8d43ff" : "1px solid #17385f",
+        boxShadow: selected
+          ? "0 0 0 3px rgba(141,67,255,.25), 0 4px 20px rgba(0,0,0,.3)"
+          : "0 4px 20px rgba(0,0,0,.3)",
       }}
     >
+      {selectMode && isCompletedWithUrl && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect();
+          }}
+          className="absolute top-2.5 right-2.5 z-30 grid place-items-center w-6 h-6 rounded-md transition-all"
+          style={{
+            background: selected
+              ? "linear-gradient(135deg,#8d43ff,#3483ff)"
+              : "rgba(6,20,42,.85)",
+            border: selected ? "2px solid #c9b5ff" : "2px solid rgba(150,120,255,.5)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+          }}
+          aria-label={selected ? "Deselect" : "Select"}
+        >
+          {selected && <Check size={14} className="text-white" strokeWidth={3} />}
+        </button>
+      )}
+
       <div className="relative aspect-video bg-[#020713] overflow-hidden">
-        {isCompleted && playableUrl ? (
+        {isCompletedWithUrl ? (
           <>
             <img
               src={getImageUrl(video.coverImage)}
               alt={video.title}
               className="absolute inset-0 w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = "none";
-              }}
+              onError={(e) => (e.target.style.display = "none")}
             />
-
             <div
               className="absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100"
               style={{
-                background:
-                  "radial-gradient(circle at center, rgba(2,7,19,.55), rgba(2,7,19,.85))",
+                background: "radial-gradient(circle at center, rgba(2,7,19,.55), rgba(2,7,19,.85))",
               }}
             />
 
-            {/* Play button */}
-            <button
-              type="button"
-              onClick={handlePlayClick}
-              className="absolute inset-0 grid place-items-center z-10 cursor-pointer"
-              aria-label="Play video"
-            >
-              <span
-                className="grid place-items-center w-[58px] h-[58px] rounded-full transition-all duration-300 group-hover:scale-110"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(110,53,237,.95), rgba(52,131,255,.95))",
-                  border: "2px solid rgba(255,255,255,.35)",
-                  boxShadow:
-                    "0 12px 40px rgba(58,90,255,.55), 0 0 0 6px rgba(110,53,237,.15)",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
+            {!selectMode && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPlay();
                 }}
+                className="absolute inset-0 grid place-items-center z-10 cursor-pointer"
+                aria-label="Play video"
               >
-                <Play size={22} fill="white" className="text-white ml-[2px]" />
-              </span>
-            </button>
+                <span
+                  className="grid place-items-center w-[58px] h-[58px] rounded-full transition-all duration-300 group-hover:scale-110"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(110,53,237,.95), rgba(52,131,255,.95))",
+                    border: "2px solid rgba(255,255,255,.35)",
+                    boxShadow: "0 12px 40px rgba(58,90,255,.55), 0 0 0 6px rgba(110,53,237,.15)",
+                    backdropFilter: "blur(6px)",
+                    WebkitBackdropFilter: "blur(6px)",
+                  }}
+                >
+                  <Play size={22} fill="white" className="text-white ml-[2px]" />
+                </span>
+              </button>
+            )}
           </>
         ) : isProcessing ? (
           <div className="absolute inset-0 grid place-items-center">
@@ -729,32 +1037,19 @@ function VideoCard({ video, onPlay, onDelete }) {
             )}
             <div
               className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(2,7,19,.6), rgba(2,7,19,.85))",
-              }}
+              style={{ background: "linear-gradient(180deg, rgba(2,7,19,.6), rgba(2,7,19,.85))" }}
             />
             <div className="relative z-10 text-center px-4 w-full">
-              <Loader2
-                size={32}
-                className="text-[#a080ff] animate-spin mx-auto mb-3"
-              />
+              <Loader2 size={32} className="text-[#a080ff] animate-spin mx-auto mb-3" />
               <p className="text-[12px] font-medium text-[#eaf1ff] mb-2">
-                {video.status === "queued"
-                  ? "Queued..."
-                  : "Generating video..."}
+                {video.status === "queued" ? "Queued..." : "Generating video..."}
               </p>
               <div className="max-w-[200px] mx-auto">
                 <div className="flex justify-between text-[10px] mb-1">
                   <span className="text-[#9bb0ca]">Progress</span>
-                  <span className="text-[#b59aff] font-medium">
-                    {video.progress || 0}%
-                  </span>
+                  <span className="text-[#b59aff] font-medium">{video.progress || 0}%</span>
                 </div>
-                <div
-                  className="h-[4px] rounded-full overflow-hidden"
-                  style={{ background: "rgba(58,91,132,.4)" }}
-                >
+                <div className="h-[4px] rounded-full overflow-hidden" style={{ background: "rgba(58,91,132,.4)" }}>
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
@@ -771,9 +1066,7 @@ function VideoCard({ video, onPlay, onDelete }) {
           <div className="absolute inset-0 grid place-items-center px-4 text-center">
             <div>
               <XCircle size={32} className="text-[#f87171] mx-auto mb-2" />
-              <p className="text-[12px] text-[#fca5a5] font-medium">
-                Generation Failed
-              </p>
+              <p className="text-[12px] text-[#fca5a5] font-medium">Generation Failed</p>
               <p className="text-[10.5px] text-[#9bb0ca] mt-1">
                 {video.errorMessage || "Something went wrong"}
               </p>
@@ -781,16 +1074,17 @@ function VideoCard({ video, onPlay, onDelete }) {
           </div>
         ) : null}
 
-        {/* Status badge top-left */}
         <div className="absolute top-2.5 left-2.5 z-20">
           <StatusBadge status={video.status} />
         </div>
 
-        {/* Delete button top-right (only on completed) */}
-        {isCompleted && (
+        {isCompleted && !selectMode && (
           <button
             type="button"
-            onClick={handleDeleteClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
             className="absolute top-2.5 right-2.5 z-20 grid place-items-center w-7 h-7 rounded-full transition-all opacity-0 group-hover:opacity-100 hover:bg-[rgba(239,68,68,.25)]"
             style={{
               background: "rgba(6,20,42,.85)",
@@ -807,19 +1101,15 @@ function VideoCard({ video, onPlay, onDelete }) {
       </div>
 
       <div className="p-3.5">
-        <h3 className="text-[13.5px] font-semibold text-[#edf4ff] line-clamp-1">
-          {video.title}
-        </h3>
-        <p className="text-[11px] text-[#9c8bff] mt-1 line-clamp-1">
-          {video.category || "Podcast"}
-        </p>
+        <h3 className="text-[13.5px] font-semibold text-[#edf4ff] line-clamp-1">{video.title}</h3>
+        <p className="text-[11px] text-[#9c8bff] mt-1 line-clamp-1">{video.category || "Podcast"}</p>
 
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.05]">
           <span className="text-[10.5px] text-[#5f7391]">
             {new Date(video.createdAt).toLocaleDateString()}
           </span>
 
-          {isCompleted && (
+          {isCompleted && !selectMode && (
             <a
               href={getImageUrl(playableUrl)}
               target="_blank"
@@ -835,6 +1125,19 @@ function VideoCard({ video, onPlay, onDelete }) {
               <Download size={12} />
               Download
             </a>
+          )}
+
+          {selectMode && isCompletedWithUrl && (
+            <span
+              className="text-[10px] font-semibold px-2 py-[3px] rounded-full"
+              style={{
+                background: selected ? "rgba(141,67,255,.25)" : "rgba(255,255,255,.05)",
+                border: selected ? "1px solid rgba(141,67,255,.6)" : "1px solid rgba(255,255,255,.1)",
+                color: selected ? "#c9b5ff" : "#7d90ac",
+              }}
+            >
+              {selected ? "Selected" : "Tap to select"}
+            </span>
           )}
         </div>
       </div>
