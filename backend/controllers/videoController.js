@@ -491,81 +491,45 @@ exports.bulkDeleteVideos = async (req, res) => {
 };
 
 
-// ================================================================
-// POST /api/video/merge
-// Merges 2+ videos via FFmpeg, PRESERVES AUDIO, streams MP4 back
-// ================================================================
-// ================================================================
-// POST /api/video/merge
-// Merges 2+ videos via FFmpeg, PRESERVES AUDIO, streams MP4 back
-// ================================================================
 exports.mergeVideos = async (req, res) => {
   try {
     const userId = getUserId(req);
-
     if (!userId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Not authenticated" });
+      return res.status(401).json({ success: false, message: "Not authenticated" });
     }
 
     const { videoIds } = req.body;
-
     if (!Array.isArray(videoIds) || videoIds.length < 2) {
-      return res.status(400).json({
-        success: false,
-        message: "Select at least 2 videos",
-      });
+      return res.status(400).json({ success: false, message: "Select at least 2 videos" });
     }
 
-    // ---- Fetch & verify ownership ----
-    const videos = await Video.find({
-      id: { $in: videoIds },
-      userId,
-    });
-
+    const videos = await Video.find({ id: { $in: videoIds }, userId });
     if (videos.length !== videoIds.length) {
-      return res.status(404).json({
-        success: false,
-        message: "One or more videos not found",
-      });
+      return res.status(404).json({ success: false, message: "One or more videos not found" });
     }
 
-    const ordered = videoIds
-      .map((id) => videos.find((v) => v.id === id))
-      .filter(Boolean);
-
+    const ordered = videoIds.map((id) => videos.find((v) => v.id === id)).filter(Boolean);
     const inputPaths = [];
     for (const v of ordered) {
       if (!v.localVideoUrl) {
-        return res.status(400).json({
-          success: false,
-          message: `Video "${v.title}" has no local file`,
-        });
+        return res.status(400).json({ success: false, message: `Video "${v.title}" has no local file` });
       }
       const rel = v.localVideoUrl.replace(/^\/+/, "");
       const abs = path.join(__dirname, "..", rel);
       if (!fs.existsSync(abs)) {
-        return res.status(404).json({
-          success: false,
-          message: `Missing file: ${path.basename(abs)}`,
-        });
+        return res.status(404).json({ success: false, message: `Missing file: ${path.basename(abs)}` });
       }
       inputPaths.push(abs);
     }
 
-    // ---- Detect audio presence in each input ----
+    // ---- Check audio ----
     const probeAudio = (filePath) =>
       new Promise((resolve) => {
         const ff = spawn("ffprobe", [
-          "-v",
-          "error",
-          "-select_streams",
-          "a:0",
-          "-show_entries",
-          "stream=codec_type",
-          "-of",
-          "csv=p=0",
+          "-v", "error",
+          "-select_streams", "a:0",
+          "-show_entries", "stream=codec_type",
+          "-of", "csv=p=0",
           filePath,
         ]);
         let out = "";
@@ -575,146 +539,126 @@ exports.mergeVideos = async (req, res) => {
       });
 
     const audioFlags = await Promise.all(inputPaths.map(probeAudio));
+    const anyHasAudio = audioFlags.some((f) => f === true);
 
     console.log("🎬 Merge inputs:");
     inputPaths.forEach((p, i) => {
-      console.log(
-        `   [${i + 1}] ${path.basename(p)} — audio: ${
-          audioFlags[i] ? "YES ✅" : "NO ❌"
-        }`
-      );
+      console.log(`   [${i + 1}] ${path.basename(p)} — audio: ${audioFlags[i] ? "YES ✅" : "NO ❌"}`);
     });
 
-    // ----------------------------------------------------------------
-    // Build FFmpeg args
-    // Every input is normalized to 1280x720 @ 30fps, yuv420p.
-    // Audio is either taken from the source (if present) or replaced
-    // with silent audio (anullsrc), then padded to match video length
-    // via `apad`.
-    // ----------------------------------------------------------------
-    const inputs = [];
-    const filterParts = [];
+    let args;
 
-    for (let i = 0; i < inputPaths.length; i++) {
-      inputs.push("-i", inputPaths[i]);
+    if (!anyHasAudio) {
+      // ⚡ FAST PATH — no audio anywhere, video-only merge
+      console.log("⚡ Fast path: video-only merge (no audio in any clip)");
 
-      // Video normalization
-      filterParts.push(
-        `[${i}:v]scale=1280:720:force_original_aspect_ratio=decrease,` +
-          `pad=1280:720:(ow-iw)/2:(oh-ih)/2,` +
-          `setsar=1,fps=30,format=yuv420p[v${i}]`
+      const filterParts = inputPaths.map(
+        (_, i) =>
+          // No scaling, no fps conversion — just format + sar
+          `[${i}:v]setsar=1,format=yuv420p[v${i}]`
       );
 
-      if (audioFlags[i]) {
-        // Use real audio, normalized + padded to match video length
-        filterParts.push(
-          `[${i}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,` +
-            `apad[a${i}]`
-        );
-      } else {
-        // No audio in this clip — generate silent audio as a separate input
-        const silenceIdx = inputPaths.length + i;
-        inputs.push(
-          "-f",
-          "lavfi",
-          "-i",
-          "anullsrc=channel_layout=stereo:sample_rate=44100"
-        );
-        filterParts.push(
-          `[${silenceIdx}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,` +
-            `apad[a${i}]`
-        );
+      const concatInputs = inputPaths.map((_, i) => `[v${i}]`).join("");
+      const filter =
+        filterParts.join(";") +
+        `;${concatInputs}concat=n=${inputPaths.length}:v=1:a=0[outv]`;
+
+      args = [
+        ...inputPaths.flatMap((p) => ["-i", p]),
+        "-filter_complex", filter,
+        "-map", "[outv]",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",   // ← fastest
+        "-crf", "26",
+        "-pix_fmt", "yuv420p",
+        "-movflags", "frag_keyframe+empty_moov+default_base_moof",
+        "-f", "mp4", "pipe:1",
+      ];
+    } else {
+      // FULL PATH — has audio, do the audio-preserving merge
+      console.log("🎬 Full path: audio-preserving merge");
+
+      const inputs = [];
+      for (let i = 0; i < inputPaths.length; i++) {
+        inputs.push("-i", inputPaths[i]);
       }
+
+      const silenceIndexMap = {};
+      let nextInputIdx = inputPaths.length;
+      for (let i = 0; i < inputPaths.length; i++) {
+        if (!audioFlags[i]) {
+          inputs.push("-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100");
+          silenceIndexMap[i] = nextInputIdx;
+          nextInputIdx++;
+        }
+      }
+
+      const filterParts = [];
+      for (let i = 0; i < inputPaths.length; i++) {
+        filterParts.push(
+          `[${i}:v]setsar=1,format=yuv420p[v${i}]`  // no scale, no fps
+        );
+        if (audioFlags[i]) {
+          filterParts.push(`[${i}:a]aresample=44100,apad[a${i}]`);
+        } else {
+          const sIdx = silenceIndexMap[i];
+          filterParts.push(`[${sIdx}:a]aresample=44100,apad[a${i}]`);
+        }
+      }
+
+      const concatInputs = inputPaths.map((_, i) => `[v${i}][a${i}]`).join("");
+      const filter =
+        filterParts.join(";") +
+        `;${concatInputs}concat=n=${inputPaths.length}:v=1:a=1[outv][outa]`;
+
+      args = [
+        ...inputs,
+        "-filter_complex", filter,
+        "-map", "[outv]",
+        "-map", "[outa]",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-crf", "26",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
+        "-b:a", "128k",
+        "-ar", "44100",
+        "-movflags", "frag_keyframe+empty_moov+default_base_moof",
+        "-f", "mp4", "pipe:1",
+      ];
     }
-
-    const videoConcat = inputPaths.map((_, i) => `[v${i}]`).join("");
-    const audioConcat = inputPaths.map((_, i) => `[a${i}]`).join("");
-
-    const filter =
-      filterParts.join(";") +
-      `;${videoConcat}${audioConcat}concat=n=${inputPaths.length}:v=1:a=1[outv][outa]`;
-
-    const args = [
-      ...inputs,
-      "-filter_complex",
-      filter,
-      "-map",
-      "[outv]",
-      "-map",
-      "[outa]",
-      "-c:v",
-      "libx264",
-      "-preset",
-      "veryfast",
-      "-crf",
-      "23",
-      "-pix_fmt",
-      "yuv420p",
-      "-c:a",
-      "aac",
-      "-b:a",
-      "128k",
-      "-ar",
-      "44100",
-      "-movflags",
-      "frag_keyframe+empty_moov+default_base_moof",
-      "-f",
-      "mp4",
-      "pipe:1",
-    ];
 
     console.log("🎬 FFmpeg args:", args.join(" "));
 
-    // ---- Stream to response ----
     res.setHeader("Content-Type", "video/mp4");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="full-podcast-${Date.now()}.mp4"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="full-podcast-${Date.now()}.mp4"`);
     res.setHeader("Cache-Control", "no-store");
 
     const ff = spawn("ffmpeg", args);
-
     ff.stdout.pipe(res);
 
-    // Full stderr logging — shows actual FFmpeg errors
     ff.stderr.on("data", (data) => {
       process.stdout.write(`[ffmpeg] ${data.toString()}`);
     });
 
     ff.on("error", (err) => {
       console.error("❌ FFmpeg spawn error:", err.message);
-      if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          message: "FFmpeg not installed or failed to start",
-        });
-      } else {
-        res.end();
-      }
+      if (!res.headersSent) res.status(500).json({ success: false, message: "FFmpeg failed" });
+      else res.end();
     });
 
     ff.on("close", (code) => {
-      if (code === 0) {
-        console.log("✅ Merge streamed with audio");
-      } else {
-        console.error(`❌ FFmpeg exited with code ${code}`);
-      }
+      if (code === 0) console.log("✅ Merge done");
+      else console.error(`❌ FFmpeg exited ${code}`);
       if (!res.writableEnded) res.end();
     });
 
     req.on("close", () => {
-      if (!ff.killed) {
-        console.log("🔌 Client disconnected — killing FFmpeg");
-        ff.kill("SIGKILL");
-      }
+      if (!ff.killed) ff.kill("SIGKILL");
     });
   } catch (err) {
     console.error("mergeVideos error:", err.message);
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, message: err.message });
-    } else {
-      res.end();
-    }
+    if (!res.headersSent) res.status(500).json({ success: false, message: err.message });
+    else res.end();
   }
 };
