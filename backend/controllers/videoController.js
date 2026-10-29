@@ -522,33 +522,59 @@ exports.mergeVideos = async (req, res) => {
       inputPaths.push(abs);
     }
 
-    // ---- Check audio ----
-    const probeAudio = (filePath) =>
+    // ---- Probe each video: audio presence + duration ----
+    const probeVideo = (filePath) =>
       new Promise((resolve) => {
-        const ff = spawn("ffprobe", [
+        // Audio check
+        const ffA = spawn("ffprobe", [
           "-v", "error",
           "-select_streams", "a:0",
           "-show_entries", "stream=codec_type",
           "-of", "csv=p=0",
           filePath,
         ]);
-        let out = "";
-        ff.stdout.on("data", (d) => (out += d.toString()));
-        ff.on("close", () => resolve(out.trim().includes("audio")));
-        ff.on("error", () => resolve(false));
+        let outA = "";
+        ffA.stdout.on("data", (d) => (outA += d.toString()));
+        ffA.on("close", () => {
+          const hasAudio = outA.trim().includes("audio");
+
+          // Duration check
+          const ffD = spawn("ffprobe", [
+            "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "csv=p=0",
+            filePath,
+          ]);
+          let outD = "";
+          ffD.stdout.on("data", (d) => (outD += d.toString()));
+          ffD.on("close", () => {
+            const dur = parseFloat(outD.trim());
+            resolve({
+              hasAudio,
+              duration: Number.isFinite(dur) && dur > 0 ? dur : 5,
+            });
+          });
+          ffD.on("error", () => resolve({ hasAudio, duration: 5 }));
+        });
+        ffA.on("error", () => resolve({ hasAudio: false, duration: 5 }));
       });
 
-    const audioFlags = await Promise.all(inputPaths.map(probeAudio));
+    const videoInfo = await Promise.all(inputPaths.map(probeVideo));
+    const audioFlags = videoInfo.map((v) => v.hasAudio);
+    const durations = videoInfo.map((v) => v.duration);
     const anyHasAudio = audioFlags.some((f) => f === true);
 
     console.log("🎬 Merge inputs:");
     inputPaths.forEach((p, i) => {
-      console.log(`   [${i + 1}] ${path.basename(p)} — audio: ${audioFlags[i] ? "YES ✅" : "NO ❌"}`);
+      console.log(
+        `   [${i + 1}] ${path.basename(p)} — audio: ${
+          audioFlags[i] ? "YES ✅" : "NO ❌"
+        }, duration: ${durations[i].toFixed(2)}s`
+      );
     });
 
-    // ⬇️ EVERY INPUT IS SCALED + PADDED TO 960x960 HERE
     const V_SIZE = "960:960";
-    const normalize = (i) =>
+    const normalizeVideo = (i) =>
       `[${i}:v]scale=${V_SIZE}:force_original_aspect_ratio=decrease,` +
       `pad=${V_SIZE}:(ow-iw)/2:(oh-ih)/2:color=black,` +
       `setsar=1,format=yuv420p[v${i}]`;
@@ -556,10 +582,10 @@ exports.mergeVideos = async (req, res) => {
     let args;
 
     if (!anyHasAudio) {
-      // ⚡ FAST PATH — no audio anywhere, video-only merge
-      console.log("⚡ Fast path: video-only merge (no audio in any clip)");
+      // ---- FAST PATH — no audio ----
+      console.log("⚡ Fast path: video-only merge");
 
-      const filterParts = inputPaths.map((_, i) => normalize(i));
+      const filterParts = inputPaths.map((_, i) => normalizeVideo(i));
       const concatInputs = inputPaths.map((_, i) => `[v${i}]`).join("");
       const filter =
         filterParts.join(";") +
@@ -577,7 +603,7 @@ exports.mergeVideos = async (req, res) => {
         "-f", "mp4", "pipe:1",
       ];
     } else {
-      // FULL PATH — has audio, do the audio-preserving merge
+      // ---- FULL PATH — audio-preserving merge ----
       console.log("🎬 Full path: audio-preserving merge");
 
       const inputs = [];
@@ -597,12 +623,22 @@ exports.mergeVideos = async (req, res) => {
 
       const filterParts = [];
       for (let i = 0; i < inputPaths.length; i++) {
-        filterParts.push(normalize(i));
+        filterParts.push(normalizeVideo(i));
+
+        // 👇 KEY FIX: bound audio to the exact video duration
+        const durStr = durations[i].toFixed(3);
+
         if (audioFlags[i]) {
-          filterParts.push(`[${i}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,apad[a${i}]`);
+          filterParts.push(
+            `[${i}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,` +
+            `apad=whole_dur=${durStr},atrim=0:${durStr},asetpts=PTS-STARTPTS[a${i}]`
+          );
         } else {
           const sIdx = silenceIndexMap[i];
-          filterParts.push(`[${sIdx}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,apad[a${i}]`);
+          filterParts.push(
+            `[${sIdx}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,` +
+            `apad=whole_dur=${durStr},atrim=0:${durStr},asetpts=PTS-STARTPTS[a${i}]`
+          );
         }
       }
 
@@ -616,6 +652,7 @@ exports.mergeVideos = async (req, res) => {
         "-filter_complex", filter,
         "-map", "[outv]",
         "-map", "[outa]",
+        "-shortest",   // 👈 safety net — stop when shortest stream ends
         "-c:v", "libx264",
         "-preset", "ultrafast",
         "-crf", "26",
