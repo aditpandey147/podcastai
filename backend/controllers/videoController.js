@@ -490,9 +490,11 @@ exports.bulkDeleteVideos = async (req, res) => {
 };
 
 
+// ================================================================
+// POST /api/video/merge
+// Merges 2+ videos via FFmpeg, PRESERVES AUDIO, streams MP4 back
+// ================================================================
 exports.mergeVideos = async (req, res) => {
-  const { spawn } = require("child_process");
-
   try {
     const userId = getUserId(req);
 
@@ -507,10 +509,11 @@ exports.mergeVideos = async (req, res) => {
     if (!Array.isArray(videoIds) || videoIds.length < 2) {
       return res.status(400).json({
         success: false,
-        message: "Select at least 2 videos to merge",
+        message: "Select at least 2 videos",
       });
     }
 
+    // ---- Fetch & verify ownership ----
     const videos = await Video.find({
       id: { $in: videoIds },
       userId,
@@ -523,7 +526,6 @@ exports.mergeVideos = async (req, res) => {
       });
     }
 
-    // Preserve order the client sent
     const ordered = videoIds
       .map((id) => videos.find((v) => v.id === id))
       .filter(Boolean);
@@ -533,27 +535,90 @@ exports.mergeVideos = async (req, res) => {
       if (!v.localVideoUrl) {
         return res.status(400).json({
           success: false,
-          message: `Video "${v.title}" has no local file — cannot merge`,
+          message: `Video "${v.title}" has no local file`,
         });
       }
       const rel = v.localVideoUrl.replace(/^\/+/, "");
       const abs = path.join(__dirname, "..", rel);
-
       if (!fs.existsSync(abs)) {
         return res.status(404).json({
           success: false,
-          message: `File missing on disk: ${path.basename(abs)}`,
+          message: `Missing file: ${path.basename(abs)}`,
         });
       }
       inputPaths.push(abs);
     }
 
-    console.log(`🎬 Merging ${inputPaths.length} videos for user ${userId}`);
+    // ---- Detect audio in each input ----
+    const probeAudio = (filePath) =>
+      new Promise((resolve) => {
+        const ff = spawn("ffprobe", [
+          "-v",
+          "error",
+          "-select_streams",
+          "a:0",
+          "-show_entries",
+          "stream=codec_type",
+          "-of",
+          "csv=p=0",
+          filePath,
+        ]);
+        let out = "";
+        ff.stdout.on("data", (d) => (out += d.toString()));
+        ff.on("close", () => resolve(out.trim().includes("audio")));
+        ff.on("error", () => resolve(false));
+      });
 
-    const inputs = inputPaths.flatMap((p) => ["-i", p]);
+    const audioFlags = await Promise.all(inputPaths.map(probeAudio));
+
+    console.log("🎬 Merge inputs:");
+    inputPaths.forEach((p, i) => {
+      console.log(
+        `   [${i + 1}] ${path.basename(p)} — audio: ${audioFlags[i] ? "YES ✅" : "NO ❌"}`
+      );
+    });
+
+    // ---- Build FFmpeg args with audio preservation ----
+    const inputs = [];
+    const filterParts = [];
+
+    for (let i = 0; i < inputPaths.length; i++) {
+      inputs.push("-i", inputPaths[i]);
+
+      // Video normalization
+      filterParts.push(
+        `[${i}:v]scale=1280:720:force_original_aspect_ratio=decrease,` +
+          `pad=1280:720:(ow-iw)/2:(oh-ih)/2,` +
+          `setsar=1,fps=30,format=yuv420p[v${i}]`
+      );
+
+      // Audio — use real audio, or inject silent audio if missing
+      if (audioFlags[i]) {
+        filterParts.push(
+          `[${i}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a${i}]`
+        );
+      } else {
+        const silenceIdx = inputPaths.length + i;
+        inputs.push(
+          "-f",
+          "lavfi",
+          "-t",
+          "5",
+          "-i",
+          "anullsrc=channel_layout=stereo:sample_rate=44100"
+        );
+        filterParts.push(
+          `[${silenceIdx}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a${i}]`
+        );
+      }
+    }
+
+    const videoConcat = inputPaths.map((_, i) => `[v${i}]`).join("");
+    const audioConcat = inputPaths.map((_, i) => `[a${i}]`).join("");
+
     const filter =
-      inputPaths.map((_, i) => `[${i}:v]`).join("") +
-      `concat=n=${inputPaths.length}:v=1:a=0[outv]`;
+      filterParts.join(";") +
+      `;${videoConcat}${audioConcat}concat=n=${inputPaths.length}:v=1:a=1[outv][outa]`;
 
     const args = [
       ...inputs,
@@ -561,6 +626,8 @@ exports.mergeVideos = async (req, res) => {
       filter,
       "-map",
       "[outv]",
+      "-map",
+      "[outa]",
       "-c:v",
       "libx264",
       "-preset",
@@ -569,6 +636,10 @@ exports.mergeVideos = async (req, res) => {
       "23",
       "-pix_fmt",
       "yuv420p",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "128k",
       "-movflags",
       "frag_keyframe+empty_moov+default_base_moof",
       "-f",
@@ -576,19 +647,27 @@ exports.mergeVideos = async (req, res) => {
       "pipe:1",
     ];
 
+    console.log("🎬 FFmpeg args:", args.join(" "));
+
+    // ---- Stream to response ----
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="merged-${Date.now()}.mp4"`
+      `attachment; filename="full-podcast-${Date.now()}.mp4"`
     );
     res.setHeader("Cache-Control", "no-store");
 
     const ff = spawn("ffmpeg", args);
+
     ff.stdout.pipe(res);
 
     ff.stderr.on("data", (data) => {
       const text = data.toString();
-      if (text.includes("frame=") || text.includes("error")) {
+      if (
+        text.includes("frame=") ||
+        text.includes("error") ||
+        text.includes("Error")
+      ) {
         process.stdout.write(`[ffmpeg] ${text}`);
       }
     });
@@ -607,7 +686,7 @@ exports.mergeVideos = async (req, res) => {
 
     ff.on("close", (code) => {
       if (code === 0) {
-        console.log(`✅ Merge streamed to client`);
+        console.log("✅ Merge streamed with audio");
       } else {
         console.error(`❌ FFmpeg exited with code ${code}`);
       }
