@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const Video = require("../models/Video");
 const ai = require("../services/aiService");
+const { spawn } = require("child_process");
 
 const {
   checkVideoGenerationLimit,
