@@ -546,18 +546,20 @@ exports.mergeVideos = async (req, res) => {
       console.log(`   [${i + 1}] ${path.basename(p)} — audio: ${audioFlags[i] ? "YES ✅" : "NO ❌"}`);
     });
 
+    // ⬇️ EVERY INPUT IS SCALED + PADDED TO 960x960 HERE
+    const V_SIZE = "960:960";
+    const normalize = (i) =>
+      `[${i}:v]scale=${V_SIZE}:force_original_aspect_ratio=decrease,` +
+      `pad=${V_SIZE}:(ow-iw)/2:(oh-ih)/2:color=black,` +
+      `setsar=1,format=yuv420p[v${i}]`;
+
     let args;
 
     if (!anyHasAudio) {
       // ⚡ FAST PATH — no audio anywhere, video-only merge
       console.log("⚡ Fast path: video-only merge (no audio in any clip)");
 
-      const filterParts = inputPaths.map(
-        (_, i) =>
-          // No scaling, no fps conversion — just format + sar
-          `[${i}:v]setsar=1,format=yuv420p[v${i}]`
-      );
-
+      const filterParts = inputPaths.map((_, i) => normalize(i));
       const concatInputs = inputPaths.map((_, i) => `[v${i}]`).join("");
       const filter =
         filterParts.join(";") +
@@ -568,7 +570,7 @@ exports.mergeVideos = async (req, res) => {
         "-filter_complex", filter,
         "-map", "[outv]",
         "-c:v", "libx264",
-        "-preset", "ultrafast",   // ← fastest
+        "-preset", "ultrafast",
         "-crf", "26",
         "-pix_fmt", "yuv420p",
         "-movflags", "frag_keyframe+empty_moov+default_base_moof",
@@ -595,14 +597,12 @@ exports.mergeVideos = async (req, res) => {
 
       const filterParts = [];
       for (let i = 0; i < inputPaths.length; i++) {
-        filterParts.push(
-          `[${i}:v]setsar=1,format=yuv420p[v${i}]`  // no scale, no fps
-        );
+        filterParts.push(normalize(i));
         if (audioFlags[i]) {
-          filterParts.push(`[${i}:a]aresample=44100,apad[a${i}]`);
+          filterParts.push(`[${i}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,apad[a${i}]`);
         } else {
           const sIdx = silenceIndexMap[i];
-          filterParts.push(`[${sIdx}:a]aresample=44100,apad[a${i}]`);
+          filterParts.push(`[${sIdx}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,apad[a${i}]`);
         }
       }
 
