@@ -495,6 +495,10 @@ exports.bulkDeleteVideos = async (req, res) => {
 // POST /api/video/merge
 // Merges 2+ videos via FFmpeg, PRESERVES AUDIO, streams MP4 back
 // ================================================================
+// ================================================================
+// POST /api/video/merge
+// Merges 2+ videos via FFmpeg, PRESERVES AUDIO, streams MP4 back
+// ================================================================
 exports.mergeVideos = async (req, res) => {
   try {
     const userId = getUserId(req);
@@ -550,7 +554,7 @@ exports.mergeVideos = async (req, res) => {
       inputPaths.push(abs);
     }
 
-    // ---- Detect audio in each input ----
+    // ---- Detect audio presence in each input ----
     const probeAudio = (filePath) =>
       new Promise((resolve) => {
         const ff = spawn("ffprobe", [
@@ -575,11 +579,19 @@ exports.mergeVideos = async (req, res) => {
     console.log("🎬 Merge inputs:");
     inputPaths.forEach((p, i) => {
       console.log(
-        `   [${i + 1}] ${path.basename(p)} — audio: ${audioFlags[i] ? "YES ✅" : "NO ❌"}`
+        `   [${i + 1}] ${path.basename(p)} — audio: ${
+          audioFlags[i] ? "YES ✅" : "NO ❌"
+        }`
       );
     });
 
-    // ---- Build FFmpeg args with audio preservation ----
+    // ----------------------------------------------------------------
+    // Build FFmpeg args
+    // Every input is normalized to 1280x720 @ 30fps, yuv420p.
+    // Audio is either taken from the source (if present) or replaced
+    // with silent audio (anullsrc), then padded to match video length
+    // via `apad`.
+    // ----------------------------------------------------------------
     const inputs = [];
     const filterParts = [];
 
@@ -593,23 +605,24 @@ exports.mergeVideos = async (req, res) => {
           `setsar=1,fps=30,format=yuv420p[v${i}]`
       );
 
-      // Audio — use real audio, or inject silent audio if missing
       if (audioFlags[i]) {
+        // Use real audio, normalized + padded to match video length
         filterParts.push(
-          `[${i}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a${i}]`
+          `[${i}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,` +
+            `apad[a${i}]`
         );
       } else {
+        // No audio in this clip — generate silent audio as a separate input
         const silenceIdx = inputPaths.length + i;
         inputs.push(
           "-f",
           "lavfi",
-          "-t",
-          "5",
           "-i",
           "anullsrc=channel_layout=stereo:sample_rate=44100"
         );
         filterParts.push(
-          `[${silenceIdx}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo[a${i}]`
+          `[${silenceIdx}:a]aresample=44100,aformat=sample_fmts=fltp:channel_layouts=stereo,` +
+            `apad[a${i}]`
         );
       }
     }
@@ -641,6 +654,8 @@ exports.mergeVideos = async (req, res) => {
       "aac",
       "-b:a",
       "128k",
+      "-ar",
+      "44100",
       "-movflags",
       "frag_keyframe+empty_moov+default_base_moof",
       "-f",
@@ -662,15 +677,9 @@ exports.mergeVideos = async (req, res) => {
 
     ff.stdout.pipe(res);
 
+    // Full stderr logging — shows actual FFmpeg errors
     ff.stderr.on("data", (data) => {
-      const text = data.toString();
-      if (
-        text.includes("frame=") ||
-        text.includes("error") ||
-        text.includes("Error")
-      ) {
-        process.stdout.write(`[ffmpeg] ${text}`);
-      }
+      process.stdout.write(`[ffmpeg] ${data.toString()}`);
     });
 
     ff.on("error", (err) => {
