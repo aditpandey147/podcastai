@@ -29,7 +29,7 @@ import toast from "react-hot-toast";
 import bannerBg from "../assets/images/createvideo-banner-bg.png";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
-const MAX_DIALOG_CHARS = 60;
+const MAX_DIALOG_CHARS = 150;
 
 const getImageUrl = (path) => {
   if (!path) return "";
