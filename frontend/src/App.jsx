@@ -5,7 +5,8 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { AIProfitProvider } from "./context/AIProfitContext";
 import PrivateRoute from "./components/features/PrivateRoute";
-import FeatureRoute from "./components/features/FeatureRoute";   // 👈 NEW
+import FeatureRoute from "./components/features/FeatureRoute";
+import WinterEffect from "./components/WinterEffect";
 import HomeNavbar from "./components/HomeNavbar";
 import Footer from "./components/Footer";
 
@@ -48,11 +49,11 @@ import Training from "./pages/support/Training";
 import Support from "./pages/support/Support";
 import Settings from "./pages/Settings";
 
-// 👇 NEW
+// Upgrade
 import UpgradeRequired from "./pages/features/UpgradeRequired";
 
 // ================================================================
-// Layout — unchanged
+// Layout — mounts WinterEffect globally on every page
 // ================================================================
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -78,7 +79,7 @@ const Layout = ({ children }) => {
     "/subscription",
     "/reseller",
     "/agency",
-    "/upgrade-required",   // 👈 NEW — dashboard-style (has Sidebar)
+    "/upgrade-required",
   ];
 
   const isDashboardPage =
@@ -100,6 +101,9 @@ const Layout = ({ children }) => {
 
   return (
     <>
+      {/* 👇 Winter Effect — fixed bottom-right, on every page */}
+      <WinterEffect />
+
       {!isDashboardPage && !isAuthPage && <HomeNavbar />}
       <div className={!isDashboardPage && !isAuthPage ? "pt-14" : ""}>
         {children}
@@ -273,7 +277,7 @@ function App() {
               element={
                 <PrivateRoute>
                   <FeatureRoute feature="ranker">
-                   <AIRanker />
+                    <AIRanker />
                   </FeatureRoute>
                 </PrivateRoute>
               }
@@ -283,7 +287,7 @@ function App() {
               element={
                 <PrivateRoute>
                   <FeatureRoute feature="ranker">
-                   <AIRankerChat />
+                    <AIRankerChat />
                   </FeatureRoute>
                 </PrivateRoute>
               }
